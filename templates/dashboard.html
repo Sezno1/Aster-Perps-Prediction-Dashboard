@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ ASTER Scanner</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #0a0e17;
+            color: #e8eaed;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            margin-left: 260px; /* Space for sidebar */
+        }
+        
+        /* PYRAMID LEVEL 1: Main Decision - Most Important */
+        .decision-card {
+            border-radius: 16px;
+            padding: 30px 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .decision-card.buy {
+            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            color: #000;
+        }
+        
+        .decision-card.wait {
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+            color: #fff;
+        }
+        
+        .decision-title {
+            font-size: 36px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+        }
+        
+        .decision-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        
+        .decision-item {
+            text-align: center;
+            padding: 12px;
+        }
+        
+        .decision-label {
+            font-size: 13px;
+            opacity: 0.75;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .decision-value {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        
+        .decision-meta {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 15px;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+        
+        /* PYRAMID LEVEL 2: Current Market Data */
+        .market-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .market-card {
+            background: #151922;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #252932;
+        }
+        
+        .market-label {
+            font-size: 12px;
+            opacity: 0.6;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .market-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00ff00;
+        }
+        
+        .market-sub {
+            font-size: 13px;
+            opacity: 0.5;
+            margin-top: 4px;
+        }
+        
+        /* PYRAMID LEVEL 3: Chart */
+        .chart-container {
+            background: #151922;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #252932;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .chart-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        #chart {
+            width: 100%;
+            height: 450px;
+        }
+        
+        /* PYRAMID LEVEL 4: AI Insights */
+        .ai-section {
+            background: #151922;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #252932;
+        }
+        
+        .ai-header {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .ai-thinking {
+            background: #0a0e17;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #00ff00;
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+        
+        .ai-stats {
+            display: flex;
+            gap: 30px;
+            font-size: 13px;
+            opacity: 0.7;
+            margin-top: 12px;
+        }
+        
+        /* PYRAMID LEVEL 5: Whale Activity */
+        .whale-section {
+            background: #151922;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #252932;
+        }
+        
+        .whale-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .whale-activity {
+            background: #0a0e17;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .whale-buy {
+            color: #00ff00;
+            font-weight: 600;
+        }
+        
+        .whale-sell {
+            color: #ff4444;
+            font-weight: 600;
+        }
+        
+        /* Bottom Info Bar */
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            font-size: 13px;
+            opacity: 0.6;
+        }
+        
+        .status-live {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff00;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.95); }
+        }
+        
+        /* Smooth number updates */
+        .value-update {
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .value-update.changed {
+            animation: highlight 0.5s ease;
+        }
+        
+        @keyframes highlight {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #151922;
+            padding: 20px;
+            border-radius: 12px;
+            width: 220px;
+            border: 1px solid #252932;
+            z-index: 1000;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        
+        .sidebar h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .sidebar label {
+            display: block;
+            font-size: 12px;
+            opacity: 0.6;
+            margin-bottom: 6px;
+        }
+        
+        .sidebar input {
+            width: 100%;
+            padding: 10px;
+            background: #0a0e17;
+            border: 1px solid #252932;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- LEVEL 1: Main Decision -->
+        <div id="decisionCard" class="decision-card buy">
+            <div class="decision-title" id="mainStatus">🎯 SCANNER SAYS BUY</div>
+            <div id="entryWindow" style="display: none; background: rgba(255,215,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; border: 2px solid #FFD700;">
+                <div style="font-size: 18px; font-weight: 700; color: #FFD700; margin-bottom: 5px;">⏰ ENTRY WINDOW</div>
+                <div style="font-size: 36px; font-weight: 900; color: #FFD700;" id="countdownTimer">60s</div>
+                <div style="font-size: 13px; opacity: 0.8; margin-top: 5px;">Execute trade within this window</div>
+            </div>
+            <div class="decision-grid">
+                <div class="decision-item">
+                    <div class="decision-label">🟢 BUY AT</div>
+                    <div class="decision-value value-update" id="buyPrice">$0.000000</div>
+                </div>
+                <div class="decision-item">
+                    <div class="decision-label">🟡 SELL AT</div>
+                    <div class="decision-value value-update" id="sellPrice">$0.000000</div>
+                </div>
+                <div class="decision-item">
+                    <div class="decision-label">🔴 STOP LOSS</div>
+                    <div class="decision-value value-update" id="stopPrice">$0.000000</div>
+                </div>
+                <div class="decision-item">
+                    <div class="decision-label">💰 YOUR PROFIT</div>
+                    <div class="decision-value value-update" id="yourProfit">+$0.00</div>
+                    <div style="font-size: 13px; opacity: 0.75; margin-top: 4px;" id="roiText">+0% • 0x</div>
+                </div>
+            </div>
+            <div class="decision-meta" id="strategyMeta">Loading...</div>
+        </div>
+        
+        <!-- LEVEL 2: Profit Calculator -->
+        <div class="market-overview">
+            <div class="market-card" style="border: 2px solid #00ff00;">
+                <div class="market-label">💰 Expected Profit</div>
+                <div class="market-value value-update" id="profitAmount" style="color: #00ff00;">+$0.00</div>
+                <div class="market-sub" id="profitROI">+0% ROI</div>
+            </div>
+            <div class="market-card" style="border: 2px solid #ff4444;">
+                <div class="market-label">⚠️ Max Loss</div>
+                <div class="market-value value-update" id="lossAmount" style="color: #ff4444;">-$0.00</div>
+                <div class="market-sub" id="lossROI">-0% loss</div>
+            </div>
+            <div class="market-card">
+                <div class="market-label">💼 Position Size</div>
+                <div class="market-value value-update" id="positionSize">$0</div>
+                <div class="market-sub" id="quantity">0 ASTER</div>
+            </div>
+            <div class="market-card">
+                <div class="market-label">⚖️ Risk:Reward</div>
+                <div class="market-value value-update" id="riskReward">1:0</div>
+                <div class="market-sub">Ratio</div>
+            </div>
+        </div>
+        
+        <!-- LEVEL 3: Market Data -->
+        <div class="market-overview">
+            <div class="market-card">
+                <div class="market-label">💵 Current Price</div>
+                <div class="market-value value-update" id="currentPrice">$0.000000</div>
+                <div class="market-sub" id="priceChange">Live</div>
+            </div>
+            <div class="market-card">
+                <div class="market-label">📊 24h Volume</div>
+                <div class="market-value value-update" id="volume24h">$0</div>
+                <div class="market-sub">Trading volume</div>
+            </div>
+            <div class="market-card">
+                <div class="market-label">📈 Signal Strength</div>
+                <div class="market-value value-update" id="signalStrength">0</div>
+                <div class="market-sub">/100</div>
+            </div>
+            <div class="market-card">
+                <div class="market-label">⚖️ Order Flow</div>
+                <div class="market-value value-update" id="orderFlow">Neutral</div>
+                <div class="market-sub" id="flowSub">Balanced</div>
+            </div>
+        </div>
+        
+        <!-- LEVEL 4: Chart -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-title">📈 ASTER/USDT Live Chart</div>
+                <div style="display: flex; gap: 5px;">
+                    <select id="chartTimeframe" style="background: #0a0e17; color: #e8eaed; border: 1px solid #252932; padding: 5px 10px; border-radius: 5px; font-size: 12px;">
+                        <option value="1m">1 Minute</option>
+                        <option value="3m">3 Minutes</option>
+                        <option value="5m">5 Minutes</option>
+                        <option value="15m" selected>15 Minutes</option>
+                        <option value="30m">30 Minutes</option>
+                        <option value="1h">1 Hour</option>
+                        <option value="2h">2 Hours</option>
+                        <option value="4h">4 Hours</option>
+                        <option value="6h">6 Hours</option>
+                        <option value="12h">12 Hours</option>
+                        <option value="1d">1 Day</option>
+                        <option value="1w">1 Week</option>
+                    </select>
+                </div>
+            </div>
+            <div id="chart"></div>
+        </div>
+        
+        <!-- LEVEL 5: AI Insights -->
+        <div class="ai-section">
+            <div class="ai-header">
+                <span>🧠</span>
+                <span>AI Analysis & Learning</span>
+            </div>
+            <div class="ai-thinking" id="aiThinking">
+                AI is analyzing market conditions...
+            </div>
+            <div class="ai-stats">
+                <span>📊 Accuracy: <strong id="aiAccuracy">0%</strong></span>
+                <span>📈 Predictions: <strong id="aiPredictions">0</strong></span>
+                <span>🎯 Confidence: <strong id="aiConfidence">0%</strong></span>
+            </div>
+        </div>
+        
+        <!-- LEVEL 6: Whale Activity -->
+        <div class="whale-section">
+            <div class="whale-title">🐋 Whale Activity</div>
+            <div id="whaleActivity">
+                <div class="whale-activity">
+                    <span style="opacity: 0.6;">Monitoring large trades...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- LEVEL 7: AI Trade Log -->
+        <div class="ai-section">
+            <div class="ai-header">
+                <span>📋</span>
+                <span>AI Trade Log (Last 10 Decisions)</span>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid #252932;">
+                            <th style="padding: 10px; text-align: left; opacity: 0.6;">Time</th>
+                            <th style="padding: 10px; text-align: left; opacity: 0.6;">AI Decision</th>
+                            <th style="padding: 10px; text-align: left; opacity: 0.6;">Price</th>
+                            <th style="padding: 10px; text-align: left; opacity: 0.6;">Leverage</th>
+                            <th style="padding: 10px; text-align: left; opacity: 0.6;">Confidence</th>
+                            <th style="padding: 10px; text-align: left; opacity: 0.6;">Outcome</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tradeLogBody">
+                        <tr>
+                            <td colspan="6" style="padding: 20px; text-align: center; opacity: 0.5;">Loading trade history...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Info Bar -->
+        <div class="info-bar">
+            <div class="status-live">
+                <span class="status-dot"></span>
+                <span>Live • Last update: <span id="updateTime">--:--:--</span></span>
+            </div>
+            <div>💰 Running cost: ~$0.25/day</div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h3>⚙️ Settings</h3>
+        <label>💰 Wallet (USDT)</label>
+        <input type="number" id="walletInput" value="10" min="1" step="1">
+        
+        <div style="margin-top: 15px;">
+            <label>⚡ Leverage</label>
+            <input type="range" id="leverageSlider" min="10" max="50" value="25" step="5" style="width: 100%;">
+            <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+                <span style="font-size: 11px; opacity: 0.5;">10x</span>
+                <span style="font-size: 14px; font-weight: 700; color: #8A2BE2;" id="leverageDisplay">25x</span>
+                <span style="font-size: 11px; opacity: 0.5;">50x</span>
+            </div>
+            <div style="font-size: 10px; opacity: 0.5; margin-top: 5px; text-align: center;" id="leverageMode">Manual control</div>
+        </div>
+        
+        <div style="margin-top: 15px; background: #0a0e17; padding: 12px; border-radius: 8px; border: 1px solid #252932;">
+            <div style="font-size: 11px; opacity: 0.5; margin-bottom: 6px;">💰 PREVIEW PROFIT</div>
+            <div style="font-size: 20px; font-weight: 700; color: #00ff00;" id="previewProfit">+$0.00</div>
+            <div style="font-size: 11px; opacity: 0.6; margin-top: 4px;" id="previewDetails">Adjust wallet & leverage</div>
+        </div>
+        
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #252932;">
+            <h3 style="margin-bottom: 15px;">📊 Quick Stats</h3>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="font-size: 11px; opacity: 0.5; margin-bottom: 4px;">STRATEGY</div>
+                <div style="font-size: 14px; font-weight: 600;" id="sidebarStrategy">Loading...</div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="font-size: 11px; opacity: 0.5; margin-bottom: 4px;">LEVERAGE</div>
+                <div style="font-size: 18px; font-weight: 700; color: #8A2BE2;" id="sidebarLeverage">0x</div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="font-size: 11px; opacity: 0.5; margin-bottom: 4px;">CONFIDENCE</div>
+                <div style="font-size: 18px; font-weight: 700;" id="sidebarConfidence">0%</div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="font-size: 11px; opacity: 0.5; margin-bottom: 4px;">AI ACCURACY</div>
+                <div style="font-size: 18px; font-weight: 700; color: #00ff00;" id="sidebarAI">0%</div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #252932;">
+            <div style="font-size: 11px; opacity: 0.5; text-align: center;">STATUS</div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px;">
+                <span class="status-dot"></span>
+                <span style="font-size: 13px; color: #00ff00; font-weight: 600;">LIVE</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const socket = io();
+        let wallet = 10;
+        let lastValues = {};
+        let manualLeverage = 25;
+        let isManualMode = true;
+        let latestData = null;
+        let lastTradeState = null; // Track trade state changes
+        
+        let currentTimeframe = '15m';
+        let chartUpdateInterval = null;
+        
+        // Notification sound
+        function playTradeAlert() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800; // High pitch
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+            
+            // Second beep
+            setTimeout(() => {
+                const osc2 = audioContext.createOscillator();
+                const gain2 = audioContext.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioContext.destination);
+                osc2.frequency.value = 1000;
+                osc2.type = 'sine';
+                gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                osc2.start(audioContext.currentTime);
+                osc2.stop(audioContext.currentTime + 0.5);
+            }, 200);
+        }
+        
+        // Initialize Plotly chart
+        function initChart(timeframe) {
+            if (!timeframe) timeframe = currentTimeframe;
+            currentTimeframe = timeframe;
+            
+            fetch(`/api/chart-data?timeframe=${timeframe}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const trace = {
+                            x: data.map(d => new Date(d.time * 1000)),
+                            open: data.map(d => d.open),
+                            high: data.map(d => d.high),
+                            low: data.map(d => d.low),
+                            close: data.map(d => d.close),
+                            type: 'candlestick',
+                            increasing: { line: { color: '#00ff00' } },
+                            decreasing: { line: { color: '#ff4444' } },
+                            name: 'ASTER/USDT'
+                        };
+                        
+                        const layout = {
+                            plot_bgcolor: '#0a0e17',
+                            paper_bgcolor: '#0a0e17',
+                            font: { color: '#8a8d91' },
+                            xaxis: {
+                                gridcolor: '#1a1d26',
+                                showgrid: true,
+                                rangeslider: { visible: false }
+                            },
+                            yaxis: {
+                                gridcolor: '#1a1d26',
+                                showgrid: true,
+                                side: 'right'
+                            },
+                            margin: { l: 10, r: 60, t: 10, b: 40 },
+                            height: 450,
+                            dragmode: 'pan',
+                            hovermode: 'x unified'
+                        };
+                        
+                        const config = {
+                            responsive: true,
+                            displayModeBar: true,
+                            displaylogo: false,
+                            scrollZoom: true,
+                            modeBarButtonsToAdd: [{
+                                name: 'Toggle Drag Mode',
+                                icon: {
+                                    width: 500,
+                                    height: 600,
+                                    path: 'M224 512c35.32 0 63.97-28.65 63.97-64H160.03c0 35.35 28.65 64 63.97 64zm215.39-149.71c-19.32-20.76-55.47-51.99-55.47-154.29 0-77.7-54.48-139.9-127.94-155.16V32c0-17.67-14.32-32-31.98-32s-31.98 14.33-31.98 32v20.84C118.56 68.1 64.08 130.3 64.08 208c0 102.3-36.15 133.53-55.47 154.29-6 6.45-8.66 14.16-8.61 21.71.11 16.4 12.98 32 32.1 32h383.8c19.12 0 32-15.6 32.1-32 .05-7.55-2.61-15.27-8.61-21.71z',
+                                    transform: 'matrix(1 0 0 -1 0 850)'
+                                },
+                                click: function(gd) {
+                                    const newMode = gd.layout.dragmode === 'zoom' ? 'pan' : 'zoom';
+                                    Plotly.relayout(gd, { dragmode: newMode });
+                                }
+                            }]
+                        };
+                        
+                        Plotly.newPlot('chart', [trace], layout, config);
+                        console.log('Chart loaded:', data.length, 'candles @', timeframe);
+                        
+                        // Auto-update chart every 10 seconds
+                        if (chartUpdateInterval) clearInterval(chartUpdateInterval);
+                        chartUpdateInterval = setInterval(() => {
+                            updateChart(timeframe);
+                        }, 10000);
+                    } else {
+                        document.getElementById('chart').innerHTML = '<div style="padding: 100px; text-align: center; color: #888;">Loading chart data...</div>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Chart error:', err);
+                    document.getElementById('chart').innerHTML = '<div style="padding: 100px; text-align: center; color: #ff4444;">Failed to load chart</div>';
+                });
+        }
+        
+        // Update chart data without recreating
+        function updateChart(timeframe) {
+            fetch(`/api/chart-data?timeframe=${timeframe}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.length > 0 && document.getElementById('chart').data) {
+                        const update = {
+                            x: [data.map(d => new Date(d.time * 1000))],
+                            open: [data.map(d => d.open)],
+                            high: [data.map(d => d.high)],
+                            low: [data.map(d => d.low)],
+                            close: [data.map(d => d.close)]
+                        };
+                        Plotly.update('chart', update, {}, [0]);
+                    }
+                })
+                .catch(err => console.error('Chart update error:', err));
+        }
+        
+        // Timeframe selector
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('chartTimeframe').addEventListener('change', (e) => {
+                initChart(e.target.value);
+            });
+        });
+        
+        function updateValue(id, value, highlight = true) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            
+            const oldValue = el.textContent;
+            if (oldValue !== value) {
+                el.textContent = value;
+                if (highlight && el.classList.contains('value-update')) {
+                    el.classList.add('changed');
+                    setTimeout(() => el.classList.remove('changed'), 500);
+                }
+            }
+        }
+        
+        function calculatePreviewProfit() {
+            if (!latestData) return;
+            
+            const lev = isManualMode ? manualLeverage : latestData.leverage;
+            const posSize = wallet * lev;
+            const buyPrice = latestData.buy_price;
+            const sellPrice = latestData.sell_price;
+            const priceMove = (sellPrice - buyPrice) / buyPrice;
+            const profit = posSize * priceMove;
+            const roi = (profit / wallet) * 100;
+            
+            document.getElementById('previewProfit').textContent = `+$${profit.toFixed(2)}`;
+            document.getElementById('previewDetails').textContent = `${lev}x leverage • +${roi.toFixed(1)}% ROI`;
+        }
+        
+        function updateDisplay(data) {
+            latestData = data;
+            const isBuy = data.is_buy_signal;
+            
+            // Detect NEW trade signal (state changed from no position to position)
+            const currentTradeState = data.has_active_position ? 'OPEN' : (isBuy ? 'SIGNAL' : 'WAIT');
+            if (lastTradeState !== currentTradeState) {
+                if (currentTradeState === 'SIGNAL' && lastTradeState === 'WAIT') {
+                    // NEW BUY SIGNAL - Play alert!
+                    playTradeAlert();
+                    console.log('🔔 NEW BUY SIGNAL!');
+                }
+                lastTradeState = currentTradeState;
+            }
+            
+            // Entry window countdown
+            const entryWindow = document.getElementById('entryWindow');
+            if (data.entry_window_seconds && data.entry_window_seconds > 0) {
+                entryWindow.style.display = 'block';
+                const seconds = Math.ceil(data.entry_window_seconds);
+                document.getElementById('countdownTimer').textContent = seconds + 's';
+                
+                // Flash animation when < 10 seconds
+                if (seconds <= 10) {
+                    document.getElementById('countdownTimer').style.animation = 'pulse 0.5s ease-in-out infinite';
+                    document.getElementById('countdownTimer').style.color = '#ff4444';
+                } else {
+                    document.getElementById('countdownTimer').style.animation = '';
+                    document.getElementById('countdownTimer').style.color = '#FFD700';
+                }
+            } else {
+                entryWindow.style.display = 'none';
+            }
+            
+            // Auto-adjust leverage when scanner triggers BUY
+            if (isBuy && data.leverage !== manualLeverage) {
+                isManualMode = false;
+                document.getElementById('leverageSlider').value = data.leverage;
+                document.getElementById('leverageDisplay').textContent = data.leverage + 'x';
+                document.getElementById('leverageMode').textContent = '🤖 AI controlled';
+                document.getElementById('leverageMode').style.color = '#00ff00';
+            } else if (!isBuy && !isManualMode) {
+                // Return to manual when no active position
+                isManualMode = true;
+                document.getElementById('leverageSlider').value = manualLeverage;
+                document.getElementById('leverageDisplay').textContent = manualLeverage + 'x';
+                document.getElementById('leverageMode').textContent = 'Manual control';
+                document.getElementById('leverageMode').style.color = '';
+            }
+            
+            calculatePreviewProfit();
+            
+            // Update decision card
+            const card = document.getElementById('decisionCard');
+            card.className = `decision-card ${isBuy ? 'buy' : 'wait'}`;
+            
+            // Update main status based on position state
+            const decisionGrid = document.querySelector('.decision-grid');
+            if (data.has_active_position) {
+                updateValue('mainStatus', '✅ POSITION OPEN');
+                decisionGrid.style.display = 'grid'; // Show prices
+            } else if (isBuy) {
+                updateValue('mainStatus', '🎯 NEW BUY SIGNAL');
+                decisionGrid.style.display = 'grid'; // Show prices
+            } else {
+                updateValue('mainStatus', '⏳ SCANNING FOR SIGNAL');
+                decisionGrid.style.display = 'none'; // Hide prices when waiting
+            }
+            
+            // Calculate profit
+            const posSize = wallet * data.leverage;
+            const qty = posSize / data.buy_price;
+            const priceMove = (data.sell_price - data.buy_price) / data.buy_price;
+            const profit = posSize * priceMove;
+            const roi = (profit / wallet) * 100;
+            
+            // Update main decision values
+            updateValue('buyPrice', `$${data.buy_price.toFixed(6)}`);
+            updateValue('sellPrice', `$${data.sell_price.toFixed(6)}`);
+            updateValue('stopPrice', `$${data.stop_price.toFixed(6)}`);
+            updateValue('yourProfit', `+$${profit.toFixed(2)}`);
+            updateValue('roiText', `+${roi.toFixed(1)}% • ${data.leverage}x`, false);
+            updateValue('strategyMeta', `${data.strategy} Strategy • ${data.confidence.toFixed(0)}% Confidence • ${data.timeframe}`, false);
+            
+            // Calculate stop loss
+            const stopMove = (data.buy_price - data.stop_price) / data.buy_price;
+            const loss = posSize * stopMove;
+            const lossRoi = (loss / wallet) * 100;
+            const rr = loss > 0 ? (profit / loss).toFixed(2) : '0';
+            
+            // Update profit calculator
+            updateValue('profitAmount', `+$${profit.toFixed(2)}`);
+            updateValue('profitROI', `+${roi.toFixed(1)}% ROI`, false);
+            updateValue('lossAmount', `-$${loss.toFixed(2)}`);
+            updateValue('lossROI', `-${lossRoi.toFixed(1)}% loss`, false);
+            updateValue('positionSize', `$${posSize.toFixed(2)}`);
+            updateValue('quantity', `${qty.toFixed(4)} ASTER`, false);
+            updateValue('riskReward', `1:${rr}`);
+            
+            // Update market overview
+            updateValue('currentPrice', `$${data.current_price.toFixed(6)}`);
+            const vol = data.volume_24h || 0;
+            updateValue('volume24h', `$${vol.toLocaleString('en-US', {maximumFractionDigits: 0})}`);
+            updateValue('signalStrength', data.signal_strength.toFixed(0));
+            
+            const flow = data.orderflow_imbalance;
+            const flowText = flow > 10 ? 'Buying' : flow < -10 ? 'Selling' : 'Neutral';
+            const flowColor = flow > 10 ? '#00ff00' : flow < -10 ? '#ff4444' : '#8a8d91';
+            document.getElementById('orderFlow').style.color = flowColor;
+            updateValue('orderFlow', flowText);
+            updateValue('flowSub', `${flow > 0 ? '+' : ''}${flow.toFixed(0)}`, false);
+            
+            // Update AI section
+            updateValue('aiThinking', data.ai_reasoning || 'AI is analyzing...', false);
+            updateValue('aiAccuracy', data.ai_accuracy > 0 ? `${data.ai_accuracy.toFixed(0)}%` : '0%');
+            updateValue('aiPredictions', data.ai_predictions.toString());
+            updateValue('aiConfidence', `${data.confidence.toFixed(0)}%`);
+            
+            // Update whale activity
+            if (data.whale_activity && data.whale_activity.length > 0) {
+                const whaleHTML = data.whale_activity.map(w => `
+                    <div class="whale-activity">
+                        <span>🐋 ${w.action}</span>
+                        <span class="whale-${w.type}">${w.amount}</span>
+                    </div>
+                `).join('');
+                document.getElementById('whaleActivity').innerHTML = whaleHTML;
+            }
+            
+            // Update trade log
+            if (data.trade_log && data.trade_log.length > 0) {
+                const logHTML = data.trade_log.map(trade => {
+                    const actionColor = trade.action.includes('BUY') ? '#00ff00' : trade.action === 'WAIT' ? '#8a8d91' : '#ff4444';
+                    const outcomeColor = trade.outcome === 'WIN' ? '#00ff00' : trade.outcome === 'LOSS' ? '#ff4444' : '#8a8d91';
+                    return `
+                        <tr style="border-bottom: 1px solid #1a1d26;">
+                            <td style="padding: 10px; opacity: 0.7;">${trade.time}</td>
+                            <td style="padding: 10px; color: ${actionColor}; font-weight: 600;">${trade.action}</td>
+                            <td style="padding: 10px;">${trade.price}</td>
+                            <td style="padding: 10px; color: #8A2BE2; font-weight: 600;">${trade.leverage}</td>
+                            <td style="padding: 10px;">${trade.confidence}</td>
+                            <td style="padding: 10px; color: ${outcomeColor}; font-weight: 600;">${trade.outcome}</td>
+                        </tr>
+                    `;
+                }).join('');
+                document.getElementById('tradeLogBody').innerHTML = logHTML;
+            } else {
+                document.getElementById('tradeLogBody').innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center; opacity: 0.5;">Waiting for first BUY signal... (Signal strength: ' + data.signal_strength.toFixed(0) + '/100, need >70)</td></tr>';
+            }
+            
+            // Update timestamp
+            updateValue('updateTime', data.timestamp, false);
+            
+            // Update sidebar
+            updateValue('sidebarStrategy', data.strategy);
+            updateValue('sidebarLeverage', `${data.leverage}x`);
+            const confColor = data.confidence >= 70 ? '#00ff00' : data.confidence >= 50 ? '#FFD700' : '#ff4444';
+            document.getElementById('sidebarConfidence').style.color = confColor;
+            updateValue('sidebarConfidence', `${data.confidence.toFixed(0)}%`);
+            updateValue('sidebarAI', data.ai_accuracy > 0 ? `${data.ai_accuracy.toFixed(0)}%` : '0%');
+        }
+        
+        // Socket connection
+        socket.on('connect', () => console.log('Connected'));
+        socket.on('update', updateDisplay);
+        
+        // Wallet input
+        document.getElementById('walletInput').addEventListener('change', (e) => {
+            wallet = parseFloat(e.target.value) || 10;
+            socket.emit('update_wallet', { wallet: wallet });
+            calculatePreviewProfit();
+        });
+        
+        // Leverage slider - manual control
+        document.getElementById('leverageSlider').addEventListener('input', (e) => {
+            manualLeverage = parseInt(e.target.value);
+            document.getElementById('leverageDisplay').textContent = manualLeverage + 'x';
+            
+            // If user manually adjusts, take back control
+            if (!latestData || !latestData.is_buy_signal) {
+                isManualMode = true;
+                document.getElementById('leverageMode').textContent = 'Manual control';
+                document.getElementById('leverageMode').style.color = '';
+                socket.emit('update_leverage', { max_leverage: manualLeverage });
+            }
+            
+            calculatePreviewProfit();
+        });
+        
+        // Initialize
+        initChart();
+        
+        // Load initial data
+        fetch('/api/data')
+            .then(r => r.json())
+            .then(updateDisplay)
+            .catch(err => console.error('Initial load error:', err));
+    </script>
+</body>
+</html>
