@@ -18,6 +18,7 @@ from multi_strategy_engine import MultiStrategyEngine
 from ai_analyzer import AIAnalyzer
 from ai_prediction_tracker import AIPredictionTracker
 from price_history import PriceHistoryDB
+from whale_tracker import WhaleTracker
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'aster-scanner-2024'
@@ -30,6 +31,7 @@ multi_strat = MultiStrategyEngine()
 pred_tracker = AIPredictionTracker()
 ai = AIAnalyzer(api_key=config.OPENAI_API_KEY, prediction_tracker=pred_tracker)
 price_history = PriceHistoryDB()
+whale_tracker = WhaleTracker(whale_threshold_usd=5000)
 
 last_ai_run = datetime.now()
 cached_ai = None
@@ -141,6 +143,10 @@ def get_scanner_data():
         except Exception:
             volume_trend = {'spike_detected': False, 'trend': 'UNKNOWN', 'multiplier': 0}
         
+        # Analyze whale trades every cycle
+        recent_trades = fetcher.aster_api.get_aggregated_trades(config.ASTER_SYMBOL, limit=50)
+        whale_analysis = whale_tracker.analyze_trades(recent_trades, current_price)
+        
         momentum = TechnicalIndicators.get_momentum_score(
             market_data['ohlcv']['aster_1h'],
             market_data['ohlcv']['aster_4h']
@@ -179,7 +185,8 @@ def get_scanner_data():
                 'dip_opportunity': dip_opportunity,
                 'support_resistance': support_resistance,
                 'recent_patterns': recent_patterns,
-                'pattern_summary': pattern_summary
+                'pattern_summary': pattern_summary,
+                'whale_analysis': whale_analysis
             }
             
             ai_analysis = ai.analyze_market_conditions(market_data, signal_results, orderflow_analysis, whale_sentiment, historical_context)
@@ -286,10 +293,10 @@ def get_scanner_data():
         if moon_candle and moon_candle.get('detected') and moon_candle['type'] == 'MOON_CANDLE':
             moon_alert = f" 🌙 MOON CANDLE: +{moon_candle['price_change_pct']:.1f}% in 5min!"
         
-        # Whale activity - Aster DEX has no public whale/leaderboard API
-        whale_activity = [
-            {'action': 'Whale tracking unavailable', 'amount': 'No API', 'type': 'neutral'}
-        ]
+        # Get recent whale trades for display
+        whale_activity = whale_tracker.get_recent_whales(minutes=60, limit=5)
+        if not whale_activity:
+            whale_activity = [{'action': 'No whale trades detected', 'amount': 'Last 60min', 'type': 'neutral'}]
         
         # Get recent AI predictions for trade log - ONLY BUY/SELL decisions (not WAIT)
         trade_log = []
@@ -357,6 +364,7 @@ def get_scanner_data():
             'moon_candle': moon_candle,
             'entry_window_seconds': entry_window_seconds,
             'pattern_summary': pattern_summary,
+            'whale_analysis': whale_analysis,
             'timestamp': datetime.now().strftime('%H:%M:%S')
         }
     except Exception as e:

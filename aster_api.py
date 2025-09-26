@@ -138,6 +138,41 @@ class AsterAPI:
             }
         return None
     
+    def get_recent_trades(self, symbol: str, limit: int = 100) -> List[Dict]:
+        """Get recent trades for whale detection"""
+        data = self._get('/fapi/v1/trades', {'symbol': symbol, 'limit': limit})
+        if data and isinstance(data, list):
+            return [
+                {
+                    'id': item.get('id'),
+                    'price': float(item.get('price', 0)),
+                    'qty': float(item.get('qty', 0)),
+                    'quote_qty': float(item.get('quoteQty', 0)),
+                    'time': int(item.get('time', 0)),
+                    'is_buyer_maker': item.get('isBuyerMaker', False)
+                }
+                for item in data
+            ]
+        return []
+    
+    def get_aggregated_trades(self, symbol: str, limit: int = 100) -> List[Dict]:
+        """Get aggregated trades (better for whale detection)"""
+        data = self._get('/fapi/v1/aggTrades', {'symbol': symbol, 'limit': limit})
+        if data and isinstance(data, list):
+            return [
+                {
+                    'agg_id': item.get('a'),
+                    'price': float(item.get('p', 0)),
+                    'qty': float(item.get('q', 0)),
+                    'first_trade_id': item.get('f'),
+                    'last_trade_id': item.get('l'),
+                    'time': int(item.get('T', 0)),
+                    'is_buyer_maker': item.get('m', False)
+                }
+                for item in data
+            ]
+        return []
+    
     def get_all_aster_data(self, symbol: str = config.ASTER_SYMBOL, 
                            fetch_klines_1h: bool = True,
                            fetch_klines_4h: bool = True) -> Dict:

@@ -88,6 +88,7 @@ class AIAnalyzer:
         support_resistance = historical_context.get('support_resistance', {})
         recent_patterns = historical_context.get('recent_patterns', {})
         pattern_summary = historical_context.get('pattern_summary', '')
+        whale_analysis = historical_context.get('whale_analysis', {})
         
         orderflow_direction = orderflow_analysis.get('prediction', {}).get('direction', 'NEUTRAL')
         orderflow_confidence = orderflow_analysis.get('prediction', {}).get('confidence', 0)
@@ -137,6 +138,13 @@ PATTERN RECOGNITION (Last 24h):
 - Pumps Detected: {recent_patterns.get('pumps_24h', 0)}
 - Dumps Detected: {recent_patterns.get('dumps_24h', 0)}
 
+WHALE ACTIVITY (Real-time trades):
+- 🐋 Whale Detected: {whale_analysis.get('whale_detected', False)}
+- Whale Buys: {len(whale_analysis.get('whale_buys', []))} (>${whale_analysis.get('whale_threshold', 5000)})
+- Whale Sells: {len(whale_analysis.get('whale_sells', []))} 
+- Buy Pressure: {whale_analysis.get('buy_pressure_pct', 0):.1f}% ({whale_analysis.get('whale_signal', 'NEUTRAL')})
+- Net Volume: ${whale_analysis.get('net_buy_pressure', 0):,.0f}
+
 LEARNED INSIGHTS: {pattern_summary}
 
 PROVIDE JSON RESPONSE:
@@ -169,6 +177,9 @@ Consider:
 13. BULLISH trend + volume spike + near support = STRONG BUY signal
 14. 🎯 **DIP_BOUNCE detected = STRONG BUY** - price just bounced from dip, likely to continue up
 15. Buy dips aggressively when: dip >0.3% + bounce >0.2% + near support = BEST ENTRY
+16. 🐋 **Whale buys + BULLISH signal = VERY STRONG BUY** - follow the whales
+17. Multiple whale buys (>2) + positive buy pressure (>20%) = institutional interest, aggressive entry
+18. Whale sells (>2) + negative buy pressure (<-20%) = distribution, WAIT or reduce size
 """
         
         return prompt
