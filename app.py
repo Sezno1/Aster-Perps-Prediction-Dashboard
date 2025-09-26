@@ -504,6 +504,8 @@ def startup_recovery():
         print("✅ Continuing with fresh data collection...")
 
 if __name__ == '__main__':
+    import os
+    
     print("\n" + "="*60)
     print("🚀 ASTER Scanner Starting...")
     print("📊 Dashboard: http://localhost:5000")
@@ -515,4 +517,5 @@ if __name__ == '__main__':
     update_thread = threading.Thread(target=background_updates, daemon=True)
     update_thread.start()
     
-    socketio.run(app, host='0.0.0.0', port=5001, debug=False, allow_unsafe_werkzeug=True)
+    port = int(os.environ.get('PORT', 5001))
+    socketio.run(app, host='0.0.0.0', port=port, debug=False, allow_unsafe_werkzeug=True)
