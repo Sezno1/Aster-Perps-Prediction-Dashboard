@@ -89,6 +89,7 @@ class AIAnalyzer:
         recent_patterns = historical_context.get('recent_patterns', {})
         pattern_summary = historical_context.get('pattern_summary', '')
         whale_analysis = historical_context.get('whale_analysis', {})
+        advanced_signals = historical_context.get('advanced_signals', {})
         
         orderflow_direction = orderflow_analysis.get('prediction', {}).get('direction', 'NEUTRAL')
         orderflow_confidence = orderflow_analysis.get('prediction', {}).get('confidence', 0)
@@ -145,6 +146,26 @@ WHALE ACTIVITY (Real-time trades):
 - Buy Pressure: {whale_analysis.get('buy_pressure_pct', 0):.1f}% ({whale_analysis.get('whale_signal', 'NEUTRAL')})
 - Net Volume: ${whale_analysis.get('net_buy_pressure', 0):,.0f}
 
+ADVANCED TECHNICAL INDICATORS:
+📊 Candlestick Patterns: {advanced_signals.get('candlestick', {}).get('signal', 'NONE')} - {len(advanced_signals.get('candlestick', {}).get('patterns', []))} patterns detected
+   {', '.join([p['name'] + ' (' + p['type'] + ')' for p in advanced_signals.get('candlestick', {}).get('patterns', [])[:3]])}
+
+🕯️ Wick Analysis: {advanced_signals.get('wick', {}).get('signal', 'NEUTRAL')}
+   Lower Wick: {advanced_signals.get('wick', {}).get('lower_wick_pct', 0):.1f}% | Upper Wick: {advanced_signals.get('wick', {}).get('upper_wick_pct', 0):.1f}%
+   {advanced_signals.get('wick', {}).get('signals', [{}])[0].get('description', '') if advanced_signals.get('wick', {}).get('signals') else 'No wick signals'}
+
+⏱️ Multi-Timeframe: {advanced_signals.get('multi_tf', {}).get('direction', 'UNKNOWN')} - Aligned: {advanced_signals.get('multi_tf', {}).get('aligned', False)}
+   1m: {advanced_signals.get('multi_tf', {}).get('timeframes', {}).get('1m', 'N/A')} | 5m: {advanced_signals.get('multi_tf', {}).get('timeframes', {}).get('5m', 'N/A')} | 15m: {advanced_signals.get('multi_tf', {}).get('timeframes', {}).get('15m', 'N/A')}
+
+📈 EMA 9/21 Crossover: {advanced_signals.get('ema', {}).get('signal', 'NEUTRAL')} - {advanced_signals.get('ema', {}).get('crossover_type', 'NONE')}
+   Trend: {advanced_signals.get('ema', {}).get('trend', 'UNKNOWN')} | Distance: {advanced_signals.get('ema', {}).get('distance_pct', 0):.2f}%
+
+📊 Bollinger Bands: {advanced_signals.get('bb', {}).get('signal', 'NEUTRAL')} - Position: {advanced_signals.get('bb', {}).get('position_pct', 50):.0f}%
+   {advanced_signals.get('bb', {}).get('reason', 'No BB signal')}
+
+📉 RSI Divergence: {advanced_signals.get('rsi', {}).get('signal', 'NEUTRAL')} - {advanced_signals.get('rsi', {}).get('divergence_type', 'NONE')}
+   RSI: {advanced_signals.get('rsi', {}).get('rsi', 50):.1f} | {advanced_signals.get('rsi', {}).get('reason', 'RSI normal')}
+
 LEARNED INSIGHTS: {pattern_summary}
 
 PROVIDE JSON RESPONSE:
@@ -180,6 +201,17 @@ Consider:
 16. 🐋 **Whale buys + BULLISH signal = VERY STRONG BUY** - follow the whales
 17. Multiple whale buys (>2) + positive buy pressure (>20%) = institutional interest, aggressive entry
 18. Whale sells (>2) + negative buy pressure (<-20%) = distribution, WAIT or reduce size
+
+ADVANCED INDICATOR RULES:
+19. 📊 **BULLISH_ENGULFING or HAMMER at support = STRONG BUY** - high probability reversal
+20. 🕯️ **Long lower wick at support (>60% of range) = BUY DIP** - buyers defended, reversal coming
+21. ⏱️ **All timeframes BULLISH + aligned = VERY STRONG BUY** - trend confirmed across 1m/5m/15m
+22. 📈 **GOLDEN_CROSS (EMA 9 crosses above 21) = BUY** - momentum shift bullish
+23. 📊 **Price at lower Bollinger Band (<10% position) = BUY BOUNCE** - oversold, mean reversion
+24. 📉 **Bullish RSI divergence (price lower low, RSI higher low) = STRONG BUY** - hidden strength
+25. 🔴 **DEATH_CROSS (EMA 9 crosses below 21) = WAIT** - momentum turning bearish
+26. 🕯️ **SHOOTING_STAR or long upper wick at resistance = WAIT** - rejection, don't chase
+27. **Combine signals**: Hammer + Long lower wick + RSI divergence + Near support = BEST ENTRY EVER
 """
         
         return prompt

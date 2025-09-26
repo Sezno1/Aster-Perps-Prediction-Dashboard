@@ -19,6 +19,7 @@ from ai_analyzer import AIAnalyzer
 from ai_prediction_tracker import AIPredictionTracker
 from price_history import PriceHistoryDB
 from whale_tracker import WhaleTracker
+from advanced_indicators import AdvancedIndicators
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'aster-scanner-2024'
@@ -147,6 +148,49 @@ def get_scanner_data():
         recent_trades = fetcher.aster_api.get_aggregated_trades(config.ASTER_SYMBOL, limit=50)
         whale_analysis = whale_tracker.analyze_trades(recent_trades, current_price)
         
+        # Advanced indicators analysis
+        klines_1m = market_data['ohlcv']['aster_1h']  # Will use this as proxy for patterns
+        klines_5m = fetcher.aster_api.get_klines(config.ASTER_SYMBOL, '5m', 50)
+        klines_15m = fetcher.aster_api.get_klines(config.ASTER_SYMBOL, '15m', 50)
+        
+        advanced_signals = {}
+        
+        # 1. Candlestick patterns
+        if not klines_1m.empty:
+            advanced_signals['candlestick'] = AdvancedIndicators.detect_candlestick_patterns(klines_1m.tail(10))
+        
+        # 2. Wick analysis
+        if not klines_1m.empty:
+            sr = support_resistance if support_resistance else {}
+            advanced_signals['wick'] = AdvancedIndicators.analyze_wicks(
+                klines_1m.tail(5), 
+                support=sr.get('support'),
+                resistance=sr.get('resistance')
+            )
+        
+        # 3. Multi-timeframe confirmation
+        if not klines_1m.empty and not klines_5m.empty and not klines_15m.empty:
+            ma_1m = klines_1m['close'].rolling(window=20).mean().iloc[-1] if len(klines_1m) >= 20 else current_price
+            ma_5m = klines_5m['close'].rolling(window=20).mean().iloc[-1] if len(klines_5m) >= 20 else current_price
+            ma_15m = klines_15m['close'].rolling(window=20).mean().iloc[-1] if len(klines_15m) >= 20 else current_price
+            
+            advanced_signals['multi_tf'] = AdvancedIndicators.multi_timeframe_confirmation(
+                current_price, current_price, current_price,
+                ma_1m, ma_5m, ma_15m
+            )
+        
+        # 4. EMA Crossover
+        if not klines_1m.empty and len(klines_1m) >= 21:
+            advanced_signals['ema'] = AdvancedIndicators.ema_crossover(klines_1m, fast_period=9, slow_period=21)
+        
+        # 5. Bollinger Bands
+        if not klines_1m.empty and len(klines_1m) >= 20:
+            advanced_signals['bb'] = AdvancedIndicators.bollinger_bands(klines_1m, period=20, std_dev=2.0)
+        
+        # 6. RSI Divergence
+        if not klines_1m.empty and len(klines_1m) >= 24:
+            advanced_signals['rsi'] = AdvancedIndicators.rsi_divergence(klines_1m, period=14)
+        
         momentum = TechnicalIndicators.get_momentum_score(
             market_data['ohlcv']['aster_1h'],
             market_data['ohlcv']['aster_4h']
@@ -178,7 +222,7 @@ def get_scanner_data():
         if (now - last_ai_run).total_seconds() >= 120 or not cached_ai:
             whale_sentiment = {'sentiment': 'NEUTRAL', 'score': 50}
             
-            # Enhanced context with historical data
+            # Enhanced context with historical data + advanced indicators
             historical_context = {
                 'volume_trend': volume_trend,
                 'moon_candle': moon_candle,
@@ -186,7 +230,8 @@ def get_scanner_data():
                 'support_resistance': support_resistance,
                 'recent_patterns': recent_patterns,
                 'pattern_summary': pattern_summary,
-                'whale_analysis': whale_analysis
+                'whale_analysis': whale_analysis,
+                'advanced_signals': advanced_signals
             }
             
             ai_analysis = ai.analyze_market_conditions(market_data, signal_results, orderflow_analysis, whale_sentiment, historical_context)

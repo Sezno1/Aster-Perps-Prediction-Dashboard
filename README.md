@@ -5,15 +5,25 @@ AI-powered paper trading dashboard for ASTER/USDT perpetual futures with real-ti
 ## Features
 
 - **Real-time Price Tracking** - 1-second updates for accurate market data
-- **AI-Powered Signal Detection** - OpenAI GPT-4 analyzes market conditions and generates BUY/WAIT signals
-- **Historical Pattern Learning** - Tracks all price movements, volume spikes, moon candles, and dip opportunities
+- **AI-Powered Signal Detection** - OpenAI GPT-4o-mini analyzes market conditions and generates BUY/WAIT signals
+- **Historical Pattern Learning** - Complete ASTER price history downloaded and analyzed
 - **Paper Trading** - Simulates trades with virtual positions, tracking P&L and learning from outcomes
 - **Interactive Charts** - Live candlestick charts with multiple timeframes (1m - 1w)
+- **Whale Tracking** - Detects large trades >$5K, calculates buy/sell pressure
 - **Volume Analysis** - Detects volume spikes (>2x average) and trend changes
 - **Dip Detection** - Identifies dip-bounce opportunities for optimal entry timing
 - **Moon Candle Alerts** - Catches >5% price moves in <5 minutes
 - **Audio Notifications** - Browser alert sounds when new trade signals trigger
 - **User Controls** - Adjustable wallet size and leverage limits (10-50x)
+
+### Advanced Technical Indicators
+
+- **Candlestick Patterns** - Hammer, Shooting Star, Bullish/Bearish Engulfing, Doji, Inverted Hammer
+- **Wick Analysis** - Long wicks at support/resistance for reversal signals
+- **Multi-Timeframe Confirmation** - Requires 1m + 5m + 15m alignment for strong signals
+- **EMA Crossovers** - Golden Cross (9/21) for momentum shifts
+- **Bollinger Bands** - Buy at lower band, sell at upper band for mean reversion
+- **RSI Divergence** - Detects hidden bullish/bearish divergences for reversals
 
 ## Setup
 
@@ -50,10 +60,24 @@ OPENAI_API_KEY=your_openai_api_key_here
 - **Aster DEX**: https://www.asterdex.com/account/api
 - **OpenAI**: https://platform.openai.com/api-keys
 
-### 4. Run the Dashboard
+### 4. Download Historical Data (Optional but Recommended)
+
+```bash
+python historical_downloader.py
+```
+
+This downloads all available ASTER price history (~8 days) for better pattern recognition.
+
+### 5. Run the Dashboard
 
 ```bash
 python app.py
+```
+
+Or to keep Mac awake while running:
+
+```bash
+caffeinate -i python app.py
 ```
 
 Open your browser to: **http://localhost:5001**
