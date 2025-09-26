@@ -7,6 +7,7 @@ from flask import Flask, render_template, jsonify
 from flask_socketio import SocketIO, emit
 import threading
 import time
+import sqlite3
 from datetime import datetime
 import config
 from data_fetcher import DataFetcher
@@ -436,15 +437,74 @@ def handle_leverage_update(data):
     except Exception as e:
         pass
 
-if __name__ == '__main__':
-    # Start background update thread
-    update_thread = threading.Thread(target=background_updates, daemon=True)
-    update_thread.start()
+def startup_recovery():
+    """On startup, backfill missed data and restore state"""
+    print("🔄 Checking for missed data during downtime...")
     
+    try:
+        conn = sqlite3.connect('price_history.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT MAX(timestamp) FROM price_ticks")
+        last_tick = cursor.fetchone()[0]
+        conn.close()
+        
+        if last_tick:
+            last_time = datetime.fromisoformat(last_tick)
+            downtime_minutes = (datetime.now() - last_time).total_seconds() / 60
+            
+            if downtime_minutes > 2:
+                print(f"📥 Scanner was offline for {downtime_minutes:.1f} minutes")
+                print("📊 Fetching historical candles to fill gaps...")
+                
+                chart_data = fetcher.aster_api.get_klines(config.ASTER_SYMBOL, '1m', int(min(downtime_minutes, 1000)))
+                if not chart_data.empty:
+                    backfilled = 0
+                    for timestamp, row in chart_data.iterrows():
+                        if timestamp > last_time:
+                            price_history.log_price_tick(
+                                price=float(row['close']),
+                                volume_1m=float(row['volume']),
+                                mark_price=None,
+                                funding_rate=None
+                            )
+                            backfilled += 1
+                    print(f"✅ Backfilled {backfilled} price ticks from Aster API")
+                
+                price_history.calculate_volume_metrics()
+                print("✅ Volume metrics recalculated")
+            else:
+                print("✅ No significant downtime detected")
+        
+        conn = sqlite3.connect('ai_predictions.db')
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT COUNT(*) FROM predictions 
+            WHERE recommendation IN ('BUY_NOW', 'STRONG_BUY', 'SELL')
+        """)
+        trade_count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM predictions WHERE outcome = 'WIN'")
+        win_count = cursor.fetchone()[0]
+        
+        win_rate = (win_count / trade_count * 100) if trade_count > 0 else 0
+        conn.close()
+        
+        print(f"📈 AI Learning Stats: {trade_count} trades, {win_rate:.1f}% win rate")
+        
+    except Exception as e:
+        print(f"⚠️ Startup recovery encountered issue: {e}")
+        print("✅ Continuing with fresh data collection...")
+
+if __name__ == '__main__':
     print("\n" + "="*60)
     print("🚀 ASTER Scanner Starting...")
     print("📊 Dashboard: http://localhost:5000")
     print("💰 Cost: ~$0.25/day")
     print("="*60 + "\n")
+    
+    startup_recovery()
+    
+    update_thread = threading.Thread(target=background_updates, daemon=True)
+    update_thread.start()
     
     socketio.run(app, host='0.0.0.0', port=5001, debug=False, allow_unsafe_werkzeug=True)
