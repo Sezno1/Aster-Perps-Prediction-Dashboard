@@ -3,9 +3,8 @@
 .env.local
 *.key
 
-# Database files (except example/template files)
+# Database files (contain live trading data - keep local only)
 *.db
-!whale_trades.db
 *.db-journal
 *.sqlite
 *.sqlite3

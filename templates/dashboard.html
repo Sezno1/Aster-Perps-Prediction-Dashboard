@@ -401,7 +401,18 @@
             <div id="chart"></div>
         </div>
         
-        <!-- LEVEL 5: AI Insights -->
+        <!-- LEVEL 5: Master Brain Context -->
+        <div class="ai-section" style="border-left: 3px solid #8A2BE2;">
+            <div class="ai-header">
+                <span>🧬</span>
+                <span>Master Brain - Pattern Discovery System</span>
+            </div>
+            <div style="background: #0a0e17; padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.8;" id="masterBrainSummary">
+                Initializing Master Brain...
+            </div>
+        </div>
+        
+        <!-- LEVEL 6: AI Insights -->
         <div class="ai-section">
             <div class="ai-header">
                 <span>🧠</span>
@@ -482,9 +493,9 @@
         </div>
         
         <div style="margin-top: 15px; background: #0a0e17; padding: 12px; border-radius: 8px; border: 1px solid #252932;">
-            <div style="font-size: 11px; opacity: 0.5; margin-bottom: 6px;">💰 PREVIEW PROFIT</div>
-            <div style="font-size: 20px; font-weight: 700; color: #00ff00;" id="previewProfit">+$0.00</div>
-            <div style="font-size: 11px; opacity: 0.6; margin-top: 4px;" id="previewDetails">Adjust wallet & leverage</div>
+            <div style="font-size: 11px; opacity: 0.5; margin-bottom: 6px;">💰 POSITION P&L</div>
+            <div style="font-size: 20px; font-weight: 700; color: #999;" id="positionPnL">$0.00</div>
+            <div style="font-size: 11px; opacity: 0.6; margin-top: 4px;" id="pnlDetails">No active position</div>
         </div>
         
         <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #252932;">
@@ -533,6 +544,29 @@
         let chartUpdateInterval = null;
         
         // Notification sound
+        function updatePositionPnL(data) {
+            const pnlDiv = document.getElementById('positionPnL');
+            const detailsDiv = document.getElementById('pnlDetails');
+            const wallet = parseFloat(document.getElementById('walletInput').value) || 10;
+            const leverage = data.leverage;
+            const positionSize = wallet * leverage;
+            
+            const entryPrice = data.buy_price;
+            const targetPrice = data.sell_price;
+            const stopPrice = data.stop_price;
+            
+            const targetPriceChangePct = ((targetPrice - entryPrice) / entryPrice) * 100;
+            const expectedProfit = positionSize * (targetPriceChangePct / 100);
+            
+            const stopPriceChangePct = ((stopPrice - entryPrice) / entryPrice) * 100;
+            const maxLoss = positionSize * (stopPriceChangePct / 100);
+            
+            pnlDiv.textContent = '+$' + expectedProfit.toFixed(2);
+            pnlDiv.style.color = '#4CAF50';
+            
+            detailsDiv.innerHTML = `Stop Loss: -$${Math.abs(maxLoss).toFixed(2)}`;
+        }
+        
         function playTradeAlert() {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
@@ -684,20 +718,6 @@
             }
         }
         
-        function calculatePreviewProfit() {
-            if (!latestData) return;
-            
-            const lev = isManualMode ? manualLeverage : latestData.leverage;
-            const posSize = wallet * lev;
-            const buyPrice = latestData.buy_price;
-            const sellPrice = latestData.sell_price;
-            const priceMove = (sellPrice - buyPrice) / buyPrice;
-            const profit = posSize * priceMove;
-            const roi = (profit / wallet) * 100;
-            
-            document.getElementById('previewProfit').textContent = `+$${profit.toFixed(2)}`;
-            document.getElementById('previewDetails').textContent = `${lev}x leverage • +${roi.toFixed(1)}% ROI`;
-        }
         
         function updateDisplay(data) {
             latestData = data;
@@ -749,7 +769,7 @@
                 document.getElementById('leverageMode').style.color = '';
             }
             
-            calculatePreviewProfit();
+            updatePositionPnL(data);
             
             // Update decision card
             const card = document.getElementById('decisionCard');
@@ -811,6 +831,11 @@
             updateValue('orderFlow', flowText);
             updateValue('flowSub', `${flow > 0 ? '+' : ''}${flow.toFixed(0)}`, false);
             
+            // Update Master Brain section
+            if (data.master_brain_summary) {
+                updateValue('masterBrainSummary', data.master_brain_summary, false);
+            }
+            
             // Update AI section
             updateValue('aiThinking', data.ai_reasoning || 'AI is analyzing...', false);
             updateValue('aiAccuracy', data.ai_accuracy > 0 ? `${data.ai_accuracy.toFixed(0)}%` : '0%');
@@ -869,7 +894,7 @@
         document.getElementById('walletInput').addEventListener('change', (e) => {
             wallet = parseFloat(e.target.value) || 10;
             socket.emit('update_wallet', { wallet: wallet });
-            calculatePreviewProfit();
+            if (latestData) updatePositionPnL(latestData);
         });
         
         // Leverage slider - manual control
@@ -885,7 +910,7 @@
                 socket.emit('update_leverage', { max_leverage: manualLeverage });
             }
             
-            calculatePreviewProfit();
+            if (latestData) updatePositionPnL(latestData);
         });
         
         // Initialize

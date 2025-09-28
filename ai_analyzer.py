@@ -91,6 +91,9 @@ class AIAnalyzer:
         whale_analysis = historical_context.get('whale_analysis', {})
         advanced_signals = historical_context.get('advanced_signals', {})
         
+        # Extract Master Brain context (BTC cycle, patterns, multi-TF, regime)
+        master_brain = historical_context.get('master_brain', {})
+        
         orderflow_direction = orderflow_analysis.get('prediction', {}).get('direction', 'NEUTRAL')
         orderflow_confidence = orderflow_analysis.get('prediction', {}).get('confidence', 0)
         imbalance = orderflow_analysis.get('imbalance_score', 0)
@@ -168,6 +171,48 @@ ADVANCED TECHNICAL INDICATORS:
 
 LEARNED INSIGHTS: {pattern_summary}
 
+🧬 MASTER BRAIN INTELLIGENCE (Bitcoin Cycle + Pattern Library):
+"""
+
+        # Add Master Brain context if available
+        if master_brain:
+            btc_cycle = master_brain.get('btc_cycle', {})
+            patterns = master_brain.get('patterns', {})
+            best_patterns = master_brain.get('best_patterns', [])
+            
+            if btc_cycle:
+                prompt += f"""
+🪙 BITCOIN 4-YEAR CYCLE POSITION:
+   • Phase: {btc_cycle.get('phase', 'UNKNOWN')}
+   • Days Since Halving: {btc_cycle.get('days_since_halving', 0)}
+   • Description: {btc_cycle.get('description', 'N/A')}
+   • Historical Strategy: {btc_cycle.get('strategy', 'N/A')}
+   
+   CRITICAL: Your trading strategy MUST adapt to cycle phase:
+   - POST_HALVING_ACCUMULATION (0-180 days): Conservative, small positions, wait for confirmation
+   - BULL_MARKET_PHASE_1 (180-540 days): Aggressive, ride trends, buy dips, higher leverage (20-40x)
+   - BULL_MARKET_PARABOLIC (540-730 days): MAXIMUM AGGRESSION, position trades, 30-50x leverage, hold for 10-50%+
+   - DISTRIBUTION_TOP (730-900 days): Take profits, reduce size, defensive
+   - BEAR_MARKET (900+ days): Cash heavy, minimal exposure, wait for cycle bottom
+"""
+            
+            if patterns and best_patterns:
+                prompt += f"""
+📚 PATTERN LIBRARY (Proven High-Probability Setups):
+   • Total Patterns Tracked: {patterns.get('total_patterns', 0)}
+   • Best Performing Patterns:
+"""
+                for i, pattern in enumerate(best_patterns[:3], 1):
+                    prompt += f"      {i}. {pattern.get('pattern_name', 'Unknown')}: {pattern.get('win_rate', 0):.0f}% win rate ({pattern.get('total_trades', 0)} trades)\n"
+                
+                prompt += """
+   CRITICAL: When you see a pattern from the library forming, INCREASE confidence significantly!
+   - Pattern with 80%+ win rate = BUY_NOW with high confidence
+   - Pattern with 70-80% win rate = Strong buy signal
+   - Pattern with <60% win rate = Use with caution, need extra confirmation
+"""
+        
+        prompt += """
 PROVIDE JSON RESPONSE:
 {{
     "recommendation": "BUY_NOW" or "WAIT" or "NO_TRADE",
@@ -212,6 +257,26 @@ ADVANCED INDICATOR RULES:
 25. 🔴 **DEATH_CROSS (EMA 9 crosses below 21) = WAIT** - momentum turning bearish
 26. 🕯️ **SHOOTING_STAR or long upper wick at resistance = WAIT** - rejection, don't chase
 27. **Combine signals**: Hammer + Long lower wick + RSI divergence + Near support = BEST ENTRY EVER
+
+🧬 MASTER BRAIN CYCLE-BASED RULES (HIGHEST PRIORITY):
+28. **BULL_MARKET_PHASE_1 (Day 180-540)**: Be AGGRESSIVE. Buy dips. Use 20-40x leverage. Target 5-20% gains.
+29. **BULL_MARKET_PARABOLIC (Day 540-730)**: MAXIMUM AGGRESSION. Position trades. 30-50x leverage. Target 10-50%+ gains. Hold for DAYS.
+30. **POST_HALVING_ACCUMULATION (Day 0-180)**: Be PATIENT. Small positions. Wait for clear setups. 10-20x leverage max.
+31. **DISTRIBUTION/BEAR**: DEFENSIVE. Scalps only if anything. Low leverage (5-15x). Quick exits.
+32. **Pattern Library Match**: If current setup matches a pattern with 70%+ win rate, increase leverage by 5-10x and confidence by 20-30%.
+33. **NO Pattern Match + Low Cycle Score**: Even if technicals look good, WAIT if we're in wrong cycle phase or no proven pattern.
+
+TRADING FREQUENCY GUIDELINES:
+- In BULL phases with good setups: Trade MORE often (1-3 signals per hour is OK)
+- When patterns align + cycle supports: Don't be afraid to BUY_NOW
+- If signal strength >70 + cycle is bullish + pattern match: BUY_NOW immediately
+- Your goal: Find 5-10 good trades per day in bull market, not just 1-2
+- Quality > Quantity, but in bull markets, quantity increases naturally
+
+TARGET WIN RATE: 90%+
+- Only recommend BUY_NOW when you're 80%+ confident of success
+- Use historical patterns + cycle context + current technicals to achieve this
+- Learn from past trades (check LEARNED INSIGHTS above for what worked/failed)
 """
         
         return prompt

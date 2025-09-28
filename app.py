@@ -20,6 +20,7 @@ from ai_prediction_tracker import AIPredictionTracker
 from price_history import PriceHistoryDB
 from whale_tracker import WhaleTracker
 from advanced_indicators import AdvancedIndicators
+from master_brain_integration import master_brain
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'aster-scanner-2024'
@@ -41,6 +42,16 @@ current_wallet_size = 10.0  # Default wallet size, updated from UI
 max_leverage = 25  # Maximum leverage AI can use, updated from UI
 last_volume_calc = datetime.now()
 last_moon_check = datetime.now()
+
+def sanitize_datetimes(obj):
+    """Convert datetime objects to strings recursively"""
+    if isinstance(obj, datetime):
+        return obj.strftime('%Y-%m-%d %H:%M:%S')
+    elif isinstance(obj, dict):
+        return {k: sanitize_datetimes(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [sanitize_datetimes(item) for item in obj]
+    return obj
 
 def get_time_of_day_context():
     """Analyze time patterns - when do different markets trade?"""
@@ -148,6 +159,12 @@ def get_scanner_data():
         recent_trades = fetcher.aster_api.get_aggregated_trades(config.ASTER_SYMBOL, limit=50)
         whale_analysis = whale_tracker.analyze_trades(recent_trades, current_price)
         
+        # Get support/resistance early (needed for wick analysis)
+        try:
+            support_resistance = price_history.detect_support_resistance(lookback_hours=24)
+        except Exception:
+            support_resistance = {'support': None, 'resistance': None}
+        
         # Advanced indicators analysis
         klines_1m = market_data['ohlcv']['aster_1h']  # Will use this as proxy for patterns
         klines_5m = fetcher.aster_api.get_klines(config.ASTER_SYMBOL, '5m', 50)
@@ -207,13 +224,11 @@ def get_scanner_data():
         orderflow_analysis = orderflow.analyze_orderbook(config.ASTER_SYMBOL, depth=100)
         opportunities = multi_strat.analyze_all_opportunities(market_data, signal_results, orderflow_analysis)
         
-        # Get support/resistance and pattern analysis from historical data
+        # Get pattern analysis from historical data
         try:
-            support_resistance = price_history.detect_support_resistance(lookback_hours=24)
             recent_patterns = price_history.get_recent_patterns(hours=24)
             pattern_summary = price_history.get_learning_summary()
         except Exception:
-            support_resistance = {'support': None, 'resistance': None}
             recent_patterns = {}
             pattern_summary = "Building pattern database..."
         
@@ -222,7 +237,9 @@ def get_scanner_data():
         if (now - last_ai_run).total_seconds() >= 120 or not cached_ai:
             whale_sentiment = {'sentiment': 'NEUTRAL', 'score': 50}
             
-            # Enhanced context with historical data + advanced indicators
+            # Enhanced context with historical data + advanced indicators + Master Brain
+            master_brain_context = master_brain.get_enhanced_context()
+            
             historical_context = {
                 'volume_trend': volume_trend,
                 'moon_candle': moon_candle,
@@ -231,7 +248,8 @@ def get_scanner_data():
                 'recent_patterns': recent_patterns,
                 'pattern_summary': pattern_summary,
                 'whale_analysis': whale_analysis,
-                'advanced_signals': advanced_signals
+                'advanced_signals': advanced_signals,
+                'master_brain': master_brain_context
             }
             
             ai_analysis = ai.analyze_market_conditions(market_data, signal_results, orderflow_analysis, whale_sentiment, historical_context)
@@ -401,18 +419,22 @@ def get_scanner_data():
             'ai_reasoning': ai_reasoning,
             'ai_recommendation': ai_recommendation,
             'volume_24h': volume_24h,
-            'whale_activity': whale_activity,
+            'whale_activity': sanitize_datetimes(whale_activity),
             'trade_log': trade_log,
             'time_context': time_context['description'] + volume_info + moon_alert,
+            'master_brain_summary': master_brain.get_dashboard_summary(),
             'has_active_position': active_position is not None,
-            'volume_trend': volume_trend,
-            'moon_candle': moon_candle,
+            'volume_trend': sanitize_datetimes(volume_trend),
+            'moon_candle': sanitize_datetimes(moon_candle),
             'entry_window_seconds': entry_window_seconds,
             'pattern_summary': pattern_summary,
-            'whale_analysis': whale_analysis,
+            'whale_analysis': sanitize_datetimes(whale_analysis),
             'timestamp': datetime.now().strftime('%H:%M:%S')
         }
     except Exception as e:
+        print(f"ERROR in get_scanner_data: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def background_updates():
@@ -421,6 +443,7 @@ def background_updates():
         time.sleep(1)  # Update every 1 second for real-time accuracy
         data = get_scanner_data()
         if data:
+            data = sanitize_datetimes(data)
             socketio.emit('update', data, namespace='/')
 
 @app.route('/')
@@ -431,7 +454,7 @@ def index():
 def get_data():
     """API endpoint for initial data load"""
     data = get_scanner_data()
-    return jsonify(data) if data else jsonify({'error': 'Failed to fetch data'}), 500
+    return jsonify(data) if data else (jsonify({'error': 'Failed to fetch data'}), 500)
 
 @app.route('/api/chart-data')
 def get_chart_data():
@@ -460,9 +483,14 @@ def get_chart_data():
 
 @socketio.on('connect')
 def handle_connect():
-    data = get_scanner_data()
-    if data:
-        emit('update', data)
+    try:
+        data = get_scanner_data()
+        if data:
+            data = sanitize_datetimes(data)
+            emit('update', data)
+    except Exception as e:
+        print(f"Error in handle_connect: {e}")
+        pass
 
 @socketio.on('disconnect')
 def handle_disconnect():
