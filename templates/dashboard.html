@@ -329,8 +329,8 @@
             <div class="decision-meta" id="strategyMeta">Loading...</div>
         </div>
         
-        <!-- LEVEL 2: Profit Calculator -->
-        <div class="market-overview">
+        <!-- LEVEL 2: Profit Calculator (Only shown when position active or new signal) -->
+        <div class="market-overview" id="profitCalculator" style="display: none;">
             <div class="market-card" style="border: 2px solid #00ff00;">
                 <div class="market-label">💰 Expected Profit</div>
                 <div class="market-value value-update" id="profitAmount" style="color: #00ff00;">+$0.00</div>
@@ -788,35 +788,46 @@
                 decisionGrid.style.display = 'none'; // Hide prices when waiting
             }
             
-            // Calculate profit
-            const posSize = wallet * data.leverage;
-            const qty = posSize / data.buy_price;
-            const priceMove = (data.sell_price - data.buy_price) / data.buy_price;
-            const profit = posSize * priceMove;
-            const roi = (profit / wallet) * 100;
+            // Only calculate and show profit/loss when there's an active position or new signal
+            const profitCalculatorSection = document.getElementById('profitCalculator');
             
-            // Update main decision values
-            updateValue('buyPrice', `$${data.buy_price.toFixed(6)}`);
-            updateValue('sellPrice', `$${data.sell_price.toFixed(6)}`);
-            updateValue('stopPrice', `$${data.stop_price.toFixed(6)}`);
-            updateValue('yourProfit', `+$${profit.toFixed(2)}`);
-            updateValue('roiText', `+${roi.toFixed(1)}% • ${data.leverage}x`, false);
-            updateValue('strategyMeta', `${data.strategy} Strategy • ${data.confidence.toFixed(0)}% Confidence • ${data.timeframe}`, false);
-            
-            // Calculate stop loss
-            const stopMove = (data.buy_price - data.stop_price) / data.buy_price;
-            const loss = posSize * stopMove;
-            const lossRoi = (loss / wallet) * 100;
-            const rr = loss > 0 ? (profit / loss).toFixed(2) : '0';
-            
-            // Update profit calculator
-            updateValue('profitAmount', `+$${profit.toFixed(2)}`);
-            updateValue('profitROI', `+${roi.toFixed(1)}% ROI`, false);
-            updateValue('lossAmount', `-$${loss.toFixed(2)}`);
-            updateValue('lossROI', `-${lossRoi.toFixed(1)}% loss`, false);
-            updateValue('positionSize', `$${posSize.toFixed(2)}`);
-            updateValue('quantity', `${qty.toFixed(4)} ASTER`, false);
-            updateValue('riskReward', `1:${rr}`);
+            if (data.has_active_position || isBuy) {
+                // Show profit calculator
+                profitCalculatorSection.style.display = 'grid';
+                
+                // Calculate position size and profit/loss
+                const posSize = wallet * data.leverage;  // e.g., $10 × 50x = $500 position
+                const qty = posSize / data.buy_price;
+                const priceChangePct = ((data.sell_price - data.buy_price) / data.buy_price) * 100;
+                const profit = wallet * (priceChangePct / 100) * data.leverage;  // Profit on your capital
+                const roi = (profit / wallet) * 100;
+                
+                // Update main decision values
+                updateValue('buyPrice', `$${data.buy_price.toFixed(6)}`);
+                updateValue('sellPrice', `$${data.sell_price.toFixed(6)}`);
+                updateValue('stopPrice', `$${data.stop_price.toFixed(6)}`);
+                updateValue('yourProfit', `+$${profit.toFixed(2)}`);
+                updateValue('roiText', `+${roi.toFixed(1)}% • ${data.leverage}x`, false);
+                updateValue('strategyMeta', `${data.strategy} Strategy • ${data.confidence.toFixed(0)}% Confidence • ${data.timeframe}`, false);
+                
+                // Calculate stop loss
+                const stopPriceChangePct = ((data.stop_price - data.buy_price) / data.buy_price) * 100;
+                const loss = wallet * Math.abs(stopPriceChangePct / 100) * data.leverage;
+                const lossRoi = (loss / wallet) * 100;
+                const rr = loss > 0 ? (profit / loss).toFixed(2) : '0';
+                
+                // Update profit calculator
+                updateValue('profitAmount', `+$${profit.toFixed(2)}`);
+                updateValue('profitROI', `+${roi.toFixed(1)}% ROI`, false);
+                updateValue('lossAmount', `-$${loss.toFixed(2)}`);
+                updateValue('lossROI', `-${lossRoi.toFixed(1)}% loss`, false);
+                updateValue('positionSize', `$${posSize.toFixed(2)}`);
+                updateValue('quantity', `${qty.toFixed(4)} ASTER`, false);
+                updateValue('riskReward', `1:${rr}`);
+            } else {
+                // Hide profit calculator when no position
+                profitCalculatorSection.style.display = 'none';
+            }
             
             // Update market overview
             updateValue('currentPrice', `$${data.current_price.toFixed(6)}`);
