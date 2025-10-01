@@ -8,8 +8,12 @@ import pandas as pd
 from datetime import datetime
 import time
 from typing import Dict, Optional, Tuple
-import config
-from aster_api import AsterAPI
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from core.config import *
+from .aster_api import AsterAPI
 
 class DataFetcher:
     def __init__(self):
@@ -18,7 +22,7 @@ class DataFetcher:
             'options': {'defaultType': 'future'}
         })
         self.aster_api = AsterAPI()
-        self.coingecko_base = config.COINGECKO_API
+        self.coingecko_base = COINGECKO_API
         
     def get_ohlcv(self, symbol: str, timeframe: str = '1h', limit: int = 100) -> pd.DataFrame:
         """Fetch OHLCV data from Binance"""
@@ -62,7 +66,7 @@ class DataFetcher:
     def get_fear_greed_index(self) -> Optional[Dict]:
         """Fetch Fear & Greed Index from Alternative.me"""
         try:
-            response = requests.get(config.FEAR_GREED_API, timeout=10)
+            response = requests.get(FEAR_GREED_API, timeout=10)
             data = response.json()
             if data and 'data' in data and len(data['data']) > 0:
                 latest = data['data'][0]
@@ -116,8 +120,8 @@ class DataFetcher:
     def get_eth_btc_ratio(self) -> Optional[float]:
         """Calculate ETH/BTC ratio"""
         try:
-            eth_price = self.get_current_price(config.ETH_SYMBOL)
-            btc_price = self.get_current_price(config.BTC_SYMBOL)
+            eth_price = self.get_current_price(ETH_SYMBOL)
+            btc_price = self.get_current_price(BTC_SYMBOL)
             if eth_price and btc_price:
                 return eth_price / btc_price
             return None
@@ -129,21 +133,21 @@ class DataFetcher:
         """Fetch all required market data"""
         print("Fetching market data...")
         
-        aster_data = self.aster_api.get_all_aster_data(config.ASTER_SYMBOL)
+        aster_data = self.aster_api.get_all_aster_data(ASTER_SYMBOL)
         
-        btc_price = self.get_current_price(config.BTC_SYMBOL)
-        eth_price = self.get_current_price(config.ETH_SYMBOL)
-        bnb_price = self.get_current_price(config.BNB_SYMBOL)
+        btc_price = self.get_current_price(BTC_SYMBOL)
+        eth_price = self.get_current_price(ETH_SYMBOL)
+        bnb_price = self.get_current_price(BNB_SYMBOL)
         
-        btc_funding = self.get_funding_rate(config.BTC_SYMBOL)
+        btc_funding = self.get_funding_rate(BTC_SYMBOL)
         
         eth_btc_ratio = eth_price / btc_price if eth_price and btc_price else None
         btc_dominance = self.get_btc_dominance()
         
         fear_greed = self.get_fear_greed_index()
         
-        btc_1h = self.get_ohlcv(config.BTC_SYMBOL, '1h', 100)
-        btc_4h = self.get_ohlcv(config.BTC_SYMBOL, '4h', 100)
+        btc_1h = self.get_ohlcv(BTC_SYMBOL, '1h', 100)
+        btc_4h = self.get_ohlcv(BTC_SYMBOL, '4h', 100)
         
         return {
             'prices': {

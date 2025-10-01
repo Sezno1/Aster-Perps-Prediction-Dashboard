@@ -3,8 +3,12 @@ Signal scoring and recommendation engine
 """
 
 from typing import Dict, Tuple, Optional
-import config
-from indicators import TechnicalIndicators
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from core.config import *
+from .indicators import TechnicalIndicators
 
 class SignalEngine:
     
@@ -142,10 +146,10 @@ class SignalEngine:
         sentiment_score = sentiment_result['score']
         
         composite = (
-            momentum_score * config.SIGNAL_WEIGHTS['momentum'] +
-            perp_score * config.SIGNAL_WEIGHTS['perp_metrics'] +
-            market_score * config.SIGNAL_WEIGHTS['market_context'] +
-            sentiment_score * config.SIGNAL_WEIGHTS['sentiment']
+            momentum_score * SIGNAL_WEIGHTS['momentum'] +
+            perp_score * SIGNAL_WEIGHTS['perp_metrics'] +
+            market_score * SIGNAL_WEIGHTS['market_context'] +
+            sentiment_score * SIGNAL_WEIGHTS['sentiment']
         )
         
         leverage_rec = SignalEngine.get_leverage_recommendation(composite)
@@ -178,7 +182,7 @@ class SignalEngine:
     @staticmethod
     def get_leverage_recommendation(score: float) -> str:
         """Get leverage recommendation based on score"""
-        for key, (min_score, max_score, rec) in config.LEVERAGE_RECOMMENDATIONS.items():
+        for key, (min_score, max_score, rec) in LEVERAGE_RECOMMENDATIONS.items():
             if min_score <= score <= max_score:
                 return rec
         return "WAIT"

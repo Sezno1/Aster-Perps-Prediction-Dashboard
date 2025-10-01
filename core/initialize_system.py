@@ -8,10 +8,13 @@ Run this ONCE to:
 """
 
 import sys
-from pattern_library import PatternLibrary
-from btc_cycle_engine import BTCCycleEngine
-from market_regime import MarketRegimeDetector
-from download_historical_data import download_all_historical_data
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from tentacles.pattern_analysis.pattern_library import PatternLibrary
+from tentacles.market_data.btc_cycle_engine import BTCCycleEngine
+from tentacles.market_data.market_regime import MarketRegimeDetector
+from tentacles.market_data.download_historical_data import download_all_historical_data
 
 def initialize_complete_system():
     print("\n" + "="*70)

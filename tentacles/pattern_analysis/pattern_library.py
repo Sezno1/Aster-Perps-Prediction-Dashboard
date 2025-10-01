@@ -14,7 +14,7 @@ class PatternLibrary:
     
     def create_db(self):
         """Create pattern library database"""
-        conn = sqlite3.connect('pattern_library.db')
+        conn = sqlite3.connect('data/pattern_library.db')
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -61,7 +61,7 @@ class PatternLibrary:
     def add_pattern(self, pattern_id, pattern_name, pattern_type, timeframe, conditions, entry_logic, exit_logic, notes=""):
         """Add new pattern to library"""
         
-        conn = sqlite3.connect('pattern_library.db')
+        conn = sqlite3.connect('data/pattern_library.db')
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -92,7 +92,7 @@ class PatternLibrary:
         profit_pct = ((exit_price - entry_price) / entry_price) * 100
         outcome = 'WIN' if profit_pct > 0 else 'LOSS'
         
-        conn = sqlite3.connect('pattern_library.db')
+        conn = sqlite3.connect('data/pattern_library.db')
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -160,7 +160,7 @@ class PatternLibrary:
     
     def get_pattern(self, pattern_id):
         """Retrieve pattern by ID"""
-        conn = sqlite3.connect('pattern_library.db')
+        conn = sqlite3.connect('data/pattern_library.db')
         cursor = conn.cursor()
         
         cursor.execute('SELECT * FROM patterns WHERE pattern_id = ?', (pattern_id,))
@@ -179,7 +179,7 @@ class PatternLibrary:
     def get_best_patterns(self, min_trades=5, min_win_rate=70, timeframe=None):
         """Get best performing patterns"""
         
-        conn = sqlite3.connect('pattern_library.db')
+        conn = sqlite3.connect('data/pattern_library.db')
         cursor = conn.cursor()
         
         query = '''
@@ -216,7 +216,7 @@ class PatternLibrary:
     def get_all_patterns_summary(self):
         """Get summary of all patterns"""
         
-        conn = sqlite3.connect('pattern_library.db')
+        conn = sqlite3.connect('data/pattern_library.db')
         cursor = conn.cursor()
         
         cursor.execute('''

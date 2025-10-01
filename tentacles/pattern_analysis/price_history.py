@@ -11,7 +11,7 @@ import threading
 import time
 
 class PriceHistoryDB:
-    def __init__(self, db_path: str = "price_history.db"):
+    def __init__(self, db_path: str = "data/price_history.db"):
         self.db_path = db_path
         self.lock = threading.Lock()
         self._init_database()

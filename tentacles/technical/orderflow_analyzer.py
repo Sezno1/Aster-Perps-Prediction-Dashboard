@@ -7,7 +7,11 @@ import pandas as pd
 import numpy as np
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime
-from aster_api import AsterAPI
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from tentacles.market_data.aster_api import AsterAPI
 
 class OrderFlowAnalyzer:
     def __init__(self, aster_api: AsterAPI):

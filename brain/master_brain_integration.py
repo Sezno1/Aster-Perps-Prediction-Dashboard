@@ -3,12 +3,24 @@ Master Brain Integration Helper
 Add this to app.py to enhance AI with full pattern discovery context
 """
 
-from btc_cycle_engine import BTCCycleEngine
-from market_regime import MarketRegimeDetector  
-from multi_timeframe_engine import MultiTimeframeEngine
-from pattern_library import PatternLibrary
-from strategy_selector import StrategySelector
-from ccxt_aggregator import MultiExchangeAggregator
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from tentacles.market_data.btc_cycle_engine import BTCCycleEngine
+from tentacles.market_data.market_regime import MarketRegimeDetector  
+from tentacles.technical.multi_timeframe_engine import MultiTimeframeEngine
+from tentacles.pattern_analysis.pattern_library import PatternLibrary
+from tentacles.intelligence.strategy_selector import StrategySelector
+from tentacles.market_data.ccxt_aggregator import MultiExchangeAggregator
+from tentacles.market_data.mvrv_tracker import MVRVIntegration
+
+# Import astrological intelligence
+try:
+    from tentacles.astrological.crypto_astrology import crypto_astrology
+    ASTROLOGY_AVAILABLE = True
+except ImportError:
+    ASTROLOGY_AVAILABLE = False
 
 class MasterBrainIntegration:
     """
@@ -24,6 +36,7 @@ class MasterBrainIntegration:
             self.pattern_lib = PatternLibrary()
             self.strategy_selector = StrategySelector()
             self.data_agg = MultiExchangeAggregator()
+            self.mvrv_integration = MVRVIntegration()
             self.enabled = True
             print("✅ Master Brain Integration: ONLINE")
         except Exception as e:
@@ -41,8 +54,27 @@ class MasterBrainIntegration:
         
         try:
             btc_cycle = self.cycle_engine.get_current_cycle_position()
-            
             best_patterns = self.pattern_lib.get_best_patterns(min_trades=0, min_win_rate=0)
+            mvrv_context = self.mvrv_integration.get_mvrv_context()
+            
+            # Get astrological context
+            astro_context = {}
+            if ASTROLOGY_AVAILABLE:
+                try:
+                    astro_analysis = crypto_astrology.get_current_astro_recommendation('ASTER')
+                    astro_context = {
+                        'available': True,
+                        'recommendation': astro_analysis['astrological_recommendation'],
+                        'confidence': astro_analysis['confidence'],
+                        'lunar_phase': astro_analysis['lunar_influence']['phase'],
+                        'volatility_indicator': astro_analysis['volatility_indicator'],
+                        'market_tendency': astro_analysis['market_tendency'],
+                        'summary': crypto_astrology.get_dashboard_summary('ASTER')
+                    }
+                except Exception as e:
+                    astro_context = {'available': False, 'error': str(e)}
+            else:
+                astro_context = {'available': False, 'reason': 'Astrology module not available'}
             
             enhanced_context = {
                 'btc_cycle': {
@@ -51,6 +83,8 @@ class MasterBrainIntegration:
                     'description': btc_cycle['phase_description'],
                     'strategy': btc_cycle['trading_strategy']
                 },
+                'mvrv_analysis': mvrv_context,
+                'astrological_analysis': astro_context,
                 'pattern_count': len(best_patterns),
                 'best_patterns': [
                     {
@@ -67,6 +101,26 @@ class MasterBrainIntegration:
         except Exception as e:
             print(f"Master Brain context error: {e}")
             return {}
+    
+    def get_astrological_analysis(self):
+        """Get astrological analysis for dashboard display"""
+        
+        if not ASTROLOGY_AVAILABLE:
+            return {'available': False, 'reason': 'Astrology module not available'}
+        
+        try:
+            astro_analysis = crypto_astrology.get_current_astro_recommendation('ASTER')
+            return {
+                'available': True,
+                'recommendation': astro_analysis['astrological_recommendation'],
+                'confidence': astro_analysis['confidence'],
+                'lunar_phase': astro_analysis['lunar_influence']['phase'],
+                'volatility_indicator': astro_analysis['volatility_indicator'],
+                'market_tendency': astro_analysis['market_tendency'],
+                'reasoning': astro_analysis['reasoning']
+            }
+        except Exception as e:
+            return {'available': False, 'error': str(e)}
     
     def get_ai_enhanced_prompt(self, market_data, signal_results, orderflow_analysis, whale_sentiment, historical_context):
         """
@@ -119,7 +173,15 @@ Pattern Library:
         try:
             context = self.get_enhanced_context()
             
-            summary = f"🧠 Cycle: {context['btc_cycle']['phase']} (Day {context['btc_cycle']['days_since_halving']} post-halving) • {context['pattern_count']} patterns tracked"
+            # Add MVRV summary if available
+            mvrv_summary = ""
+            if context.get('mvrv_analysis') and context['mvrv_analysis']:
+                mvrv = context['mvrv_analysis']
+                zscore = mvrv.get('mvrv_zscore', 0)
+                phase = mvrv.get('market_phase', '').replace('_', ' ')
+                mvrv_summary = f" • MVRV: {zscore:.1f} ({phase})"
+            
+            summary = f"🧠 Cycle: {context['btc_cycle']['phase']} (Day {context['btc_cycle']['days_since_halving']} post-halving) • {context['pattern_count']} patterns tracked{mvrv_summary}"
             
             return summary
             

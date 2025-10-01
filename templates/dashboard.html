@@ -200,6 +200,16 @@
             border-radius: 8px;
             margin-bottom: 8px;
             font-size: 14px;
+            transition: all 0.3s ease;
+            border: 1px solid #252932;
+        }
+        
+        .whale-activity:hover {
+            background: #151922;
+            border-color: #00ff88;
+        }
+        
+        .whale-activity-simple {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -399,6 +409,87 @@
                 </div>
             </div>
             <div id="chart"></div>
+        </div>
+        
+        <!-- LEVEL 4.5: Live Planetary Positions -->
+        <div style="background: #151922; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #252932;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                <span style="font-size: 18px;">🪐</span>
+                <span style="font-size: 18px; font-weight: 700;">Live Planetary Positions</span>
+                <span style="font-size: 12px; opacity: 0.7; cursor: help;" title="Real-time planetary positions and their trading impact on ASTER">ℹ️</span>
+            </div>
+            
+            <!-- Planetary Grid -->
+            <div style="background: #0a0e17; border-radius: 8px; padding: 15px;">
+                <div id="planetaryPositions" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                    <!-- Planets will be populated here -->
+                    <div style="text-align: center; color: #8a8d91; font-size: 12px; padding: 20px; grid-column: 1 / -1;">
+                        Loading planetary positions...
+                    </div>
+                </div>
+                
+                <!-- Moon Phase Special Section -->
+                <div id="moonPhaseSection" style="background: #1a1f2e; border-radius: 8px; padding: 15px; border: 1px solid #2a3441;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                        <span style="font-size: 20px;">🌙</span>
+                        <span style="font-weight: 600; font-size: 14px;">Moon Analysis</span>
+                    </div>
+                    <div id="moonDetails" style="color: #e8eaed; font-size: 12px;">
+                        Loading moon data...
+                    </div>
+                </div>
+                
+                <!-- Active Aspects Section -->
+                <div id="aspectsSection" style="background: #1a1f2e; border-radius: 8px; padding: 15px; border: 1px solid #2a3441; margin-top: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                        <span style="font-size: 20px;">⭐</span>
+                        <span style="font-weight: 600; font-size: 14px;">Active Aspects</span>
+                    </div>
+                    <div id="aspectsList" style="color: #e8eaed; font-size: 12px;">
+                        Loading aspects...
+                    </div>
+                </div>
+                
+                <!-- Astrological Market Intelligence -->
+                <div id="astroIntelligence" style="background: #1a1f2e; border-radius: 8px; padding: 15px; border: 1px solid #2a3441; margin-top: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                        <span style="font-size: 20px;">🔮</span>
+                        <span style="font-weight: 600; font-size: 14px;">ASTER Trading Intelligence</span>
+                    </div>
+                    <div id="tradingIntelligence" style="color: #e8eaed; font-size: 12px;">
+                        Loading astrological intelligence...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- LEVEL 4.6: AI Data Source Weights Pie Chart -->
+        <div style="background: #151922; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #252932;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                <span style="font-size: 18px;">🧮</span>
+                <span style="font-size: 18px; font-weight: 700;">AI Data Source Weights</span>
+                <span style="font-size: 12px; opacity: 0.7; cursor: help;" title="Real-time breakdown of how AI weights different data sources">ℹ️</span>
+            </div>
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div id="pieChart" style="width: 300px; height: 200px;"></div>
+                <div id="pieChartStats" style="flex: 1; background: #0a0e17; border-radius: 8px; padding: 15px; font-size: 12px;">
+                    <div style="text-align: center; color: #8a8d91; padding: 20px;">Loading data source analysis...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- LEVEL 4.7: Astrological Highlights -->
+        <div style="background: #151922; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #252932;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                <span style="font-size: 18px;">🔮</span>
+                <span style="font-size: 18px; font-weight: 700;">Astrological Market Highlights</span>
+                <span style="font-size: 12px; opacity: 0.7; cursor: help;" title="Key astrological positions and their market significance">ℹ️</span>
+            </div>
+            <div id="astrologicalHighlights" style="background: #0a0e17; border-radius: 8px; padding: 15px;">
+                <div style="text-align: center; color: #8a8d91; font-size: 12px; padding: 20px;">
+                    Loading astrological highlights...
+                </div>
+            </div>
         </div>
         
         <!-- LEVEL 5: Master Brain Context -->
@@ -853,14 +944,40 @@
             updateValue('aiPredictions', data.ai_predictions.toString());
             updateValue('aiConfidence', `${data.confidence.toFixed(0)}%`);
             
-            // Update whale activity
+            // Update whale activity with enhanced info
             if (data.whale_activity && data.whale_activity.length > 0) {
-                const whaleHTML = data.whale_activity.map(w => `
-                    <div class="whale-activity">
-                        <span>🐋 ${w.action}</span>
-                        <span class="whale-${w.type}">${w.amount}</span>
-                    </div>
-                `).join('');
+                const whaleHTML = data.whale_activity.map(w => {
+                    const isWhale = w.action !== 'No whale trades detected';
+                    
+                    if (!isWhale) {
+                        return `
+                            <div class="whale-activity">
+                                <span style="opacity: 0.6;">🐋 ${w.action}</span>
+                                <span style="opacity: 0.6;">${w.amount}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    // Color code P&L
+                    let pnlColor = '#8a8d91';
+                    if (w.pnl && w.pnl !== 'N/A') {
+                        if (w.pnl.startsWith('+')) pnlColor = '#00ff88';
+                        else if (w.pnl.startsWith('-')) pnlColor = '#ff4757';
+                    }
+                    
+                    return `
+                        <div class="whale-activity" style="border-left: 3px solid ${w.type === 'bullish' ? '#00ff88' : '#ff4757'};">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span style="font-weight: 600;">🐋 ${w.action}</span>
+                                <span style="color: ${pnlColor}; font-weight: 600;">${w.pnl}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; opacity: 0.8;">
+                                <span>${w.amount}</span>
+                                <span style="font-family: monospace;">${w.tx_hash_short}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
                 document.getElementById('whaleActivity').innerHTML = whaleHTML;
             }
             
@@ -895,6 +1012,34 @@
             document.getElementById('sidebarConfidence').style.color = confColor;
             updateValue('sidebarConfidence', `${data.confidence.toFixed(0)}%`);
             updateValue('sidebarAI', data.ai_accuracy > 0 ? `${data.ai_accuracy.toFixed(0)}%` : '0%');
+            
+            // Update planetary positions with error handling
+            try {
+                updatePlanetaryPositions(data);
+                console.log('✅ Planetary positions updated');
+            } catch (err) {
+                console.error('❌ Error updating planetary positions:', err);
+                const planetaryDiv = document.getElementById('planetaryPositions');
+                if (planetaryDiv) {
+                    planetaryDiv.innerHTML = '<div style="color: #ff4444;">Error loading planetary data</div>';
+                }
+            }
+            
+            // Update pie chart with error handling
+            try {
+                updatePieChart(data);
+                console.log('✅ Pie chart updated');
+            } catch (err) {
+                console.error('❌ Error updating pie chart:', err);
+            }
+            
+            // Update astrological highlights with error handling  
+            try {
+                updateAstrologicalHighlights(data);
+                console.log('✅ Astrological highlights updated');
+            } catch (err) {
+                console.error('❌ Error updating astrological highlights:', err);
+            }
         }
         
         // Socket connection
@@ -924,14 +1069,423 @@
             if (latestData) updatePositionPnL(latestData);
         });
         
+        // Helper functions for astrological data
+        function getZodiacSignName(signNumber) {
+            const signs = [
+                'Aries ♈', 'Taurus ♉', 'Gemini ♊', 'Cancer ♋',
+                'Leo ♌', 'Virgo ♍', 'Libra ♎', 'Scorpio ♏',
+                'Sagittarius ♐', 'Capricorn ♑', 'Aquarius ♒', 'Pisces ♓'
+            ];
+            const index = (parseInt(signNumber) || 0) % 12;
+            return signs[index] || 'Unknown';
+        }
+
+        function getMoonPhaseDescription(illumination) {
+            const percent = parseFloat(illumination) || 0;
+            if (percent < 5) return 'New Moon - Fresh starts & new opportunities';
+            if (percent < 25) return 'Waxing Crescent - Building momentum';
+            if (percent < 45) return 'First Quarter - Action & decisions';
+            if (percent < 55) return 'Waxing Gibbous - Refinement & adjustment';
+            if (percent < 75) return 'Full Moon - Peak energy & completion';
+            if (percent < 95) return 'Waning Gibbous - Release & letting go';
+            return 'Last Quarter - Review & preparation';
+        }
+
+        function getTradingImpactDescription(impact) {
+            const impacts = {
+                'bullish_bias': 'Favorable for long positions',
+                'bearish_bias': 'Favorable for short positions', 
+                'accumulation_phase': 'Good for building positions',
+                'growth_potential': 'High growth opportunity',
+                'neutral': 'Balanced energy - no strong bias',
+                'volatile': 'Expect increased volatility',
+                'stability': 'Stable market conditions expected'
+            };
+            return impacts[impact] || 'Market influence unclear';
+        }
+
+        function getAspectDescription(aspectType) {
+            const aspects = {
+                'conjunction': 'Powerful fusion of energies - major impact',
+                'opposition': 'Tension requiring balance - volatility likely',
+                'trine': 'Harmonious flow - favorable conditions',
+                'square': 'Challenge & dynamic action - price movement',
+                'sextile': 'Opportunities & positive developments',
+                'void_of_course': 'Caution period - avoid major moves'
+            };
+            return aspects[aspectType] || 'Planetary interaction affecting markets';
+        }
+
+        function getFixedStarDescription(starName) {
+            const stars = {
+                'regulus': 'Royal Star of Leadership - brings success through integrity',
+                'spica': 'Star of Wealth & Fame - gifts and unexpected gains',
+                'arcturus': 'Guardian of the Bear - protection and guidance',
+                'aldebaran': 'Watcher of the East - courage and honor',
+                'antares': 'Rival of Mars - intensity and transformation',
+                'vega': 'Star of Achievement - artistic and material success',
+                'altair': 'Eagle Star - soaring to new heights',
+                'fomalhaut': 'Watcher of the South - idealism and vision',
+                'sirius': 'Dog Star - illumination and breakthrough',
+                'capella': 'Little Goat - nurturing growth and abundance'
+            };
+            return stars[starName?.toLowerCase()] || 'Royal fixed star bringing powerful energy';
+        }
+
+        function showTooltip(tooltipId, text, event) {
+            const tooltip = document.getElementById(tooltipId);
+            if (tooltip) {
+                tooltip.innerHTML = text;
+                tooltip.style.display = 'block';
+                
+                // Position tooltip to avoid going off screen
+                const rect = event.target.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+                
+                if (rect.left + tooltipRect.width > window.innerWidth) {
+                    tooltip.style.left = 'auto';
+                    tooltip.style.right = '0';
+                    tooltip.style.transform = 'translateX(0)';
+                } else {
+                    tooltip.style.left = '50%';
+                    tooltip.style.right = 'auto';
+                    tooltip.style.transform = 'translateX(-50%)';
+                }
+            }
+        }
+
+        function hideTooltip(tooltipId) {
+            const tooltip = document.getElementById(tooltipId);
+            if (tooltip) {
+                tooltip.style.display = 'none';
+            }
+        }
+
+        // Update astrological events
+        function updatePlanetaryPositions(data) {
+            try {
+                const astroData = data.astrological_analysis;
+                if (!astroData || !astroData.available) {
+                    document.getElementById('planetaryPositions').innerHTML = 
+                        '<div style="text-align: center; color: #8a8d91; font-size: 12px; padding: 20px; grid-column: 1 / -1;">No astrological data available</div>';
+                    return;
+                }
+
+                // Planet data with trading descriptions
+                const planetData = {
+                    'Sun': { emoji: '☀️', description: 'Core identity, ego, vitality', asterTrading: 'Represents ASTER\'s fundamental value and market confidence. Strong Sun aspects boost overall bullish sentiment.' },
+                    'Moon': { emoji: '🌙', description: 'Emotions, intuition, public mood', asterTrading: 'Governs market emotions and retail investor sentiment toward ASTER. Moon phases affect buying/selling waves.' },
+                    'Mercury': { emoji: '☿️', description: 'Communication, data, quick trades', asterTrading: 'Rules information flow and news impact on ASTER. Mercury retrograde can cause communication breakdowns affecting price.' },
+                    'Venus': { emoji: '♀️', description: 'Values, attraction, money flow', asterTrading: 'Influences ASTER\'s attractiveness to investors and money flow. Venus aspects bring harmony to price movements.' },
+                    'Mars': { emoji: '♂️', description: 'Action, aggression, impulse', asterTrading: 'Creates sudden price movements and aggressive buying/selling in ASTER. Mars aspects trigger volatility spikes.' },
+                    'Jupiter': { emoji: '♃', description: 'Expansion, optimism, growth', asterTrading: 'Brings expansion and bullish momentum to ASTER. Jupiter aspects often coincide with significant price pumps.' },
+                    'Saturn': { emoji: '♄', description: 'Structure, discipline, limitations', asterTrading: 'Creates resistance levels and consolidation phases in ASTER. Saturn aspects test support/resistance zones.' },
+                    'Uranus': { emoji: '♅', description: 'Innovation, disruption, surprises', asterTrading: 'Triggers sudden breakouts and unexpected moves in ASTER. Uranus aspects bring revolutionary price action.' },
+                    'Neptune': { emoji: '♆', description: 'Illusion, dreams, confusion', asterTrading: 'Can create false signals or irrational exuberance in ASTER trading. Neptune aspects require extra caution.' },
+                    'Pluto': { emoji: '♇', description: 'Transformation, power, extremes', asterTrading: 'Marks major trend reversals and transformative moments for ASTER. Pluto aspects signal deep market changes.' }
+                };
+
+                // Get data from API
+                const planetaryPositions = astroData.comprehensive_planetary_data?.planets || {};
+                const lunarData = astroData.current_lunar_detailed || {};
+                const aspects = astroData.current_aspects_detailed?.major_aspects || [];
+
+                // Create planetary grid HTML
+                let planetsHtml = '';
+                Object.keys(planetaryPositions).forEach(planetName => {
+                    const planet = planetData[planetName];
+                    const planetPosition = planetaryPositions[planetName];
+                    if (!planet || !planetPosition) return;
+                    
+                    planetsHtml += `
+                        <div style="background: #1a1f2e; border-radius: 8px; padding: 12px; border: 1px solid #2a3441; cursor: help; transition: all 0.3s ease;" 
+                             onmouseenter="showPlanetTooltip('${planetName}', this, event)" onmouseleave="hidePlanetTooltip(this)"
+                             title="${planet.asterTrading}">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <span style="font-size: 18px;">${planet.emoji}</span>
+                                <span style="font-weight: 600; font-size: 13px; color: #e8eaed;">${planetName}</span>
+                            </div>
+                            <div style="font-size: 11px; color: #8a8d91; margin-bottom: 4px;">${planetPosition.exact_position || 'Loading...'}</div>
+                            <div style="font-size: 10px; color: #666; line-height: 1.3;">${planet.description}</div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('planetaryPositions').innerHTML = planetsHtml;
+
+                // Update Moon Details section
+                const moonHtml = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px;">
+                        <div><div style="font-size: 10px; color: #8a8d91;">Position</div><div style="font-size: 12px; font-weight: 600;">${lunarData.moon_sign || 'Unknown'} ${lunarData.moon_degree || 0}°</div></div>
+                        <div><div style="font-size: 10px; color: #8a8d91;">Phase</div><div style="font-size: 12px; font-weight: 600;">${lunarData.illumination_percent ? lunarData.illumination_percent.toFixed(1) + '%' : '0%'} illuminated</div></div>
+                        <div><div style="font-size: 10px; color: #8a8d91;">Impact</div><div style="font-size: 12px; font-weight: 600;">House ${lunarData.house || 'Unknown'}</div></div>
+                    </div>
+                `;
+                document.getElementById('moonDetails').innerHTML = moonHtml;
+
+                // Update Active Aspects section
+                let aspectsHtml = '';
+                if (aspects.length > 0) {
+                    aspects.slice(0, 6).forEach(aspect => {
+                        const strength = aspect.strength ? (aspect.strength * 100).toFixed(0) : '0';
+                        const orb = aspect.orb ? aspect.orb.toFixed(1) : '0.0';
+                        const strengthColor = aspect.strength > 0.7 ? '#10b981' : aspect.strength > 0.4 ? '#fbbf24' : '#8a8d91';
+                        
+                        aspectsHtml += `
+                            <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #2a3441;">
+                                <div style="font-size: 11px;"><span style="font-weight: 600;">${aspect.planet1}</span> <span style="color: #8a8d91;">${aspect.aspect}</span> <span style="font-weight: 600;">${aspect.planet2}</span></div>
+                                <div style="display: flex; gap: 8px;"><span style="font-size: 10px; color: #8a8d91;">${orb}° orb</span><span style="font-size: 10px; color: ${strengthColor}; font-weight: 600;">${strength}%</span></div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    aspectsHtml = '<div style="text-align: center; color: #8a8d91; font-size: 11px; padding: 10px;">No major aspects active</div>';
+                }
+                document.getElementById('aspectsList').innerHTML = aspectsHtml;
+
+                // Update Trading Intelligence section
+                const sentiment = astroData.market_sentiment || 'Unknown';
+                const volatility = astroData.volatility_forecast || 'Unknown';
+                const confidence = astroData.confidence_modifier || 0;
+                const sentimentColor = sentiment === 'Bullish' ? '#10b981' : sentiment === 'Bearish' ? '#ef4444' : '#8a8d91';
+                const volatilityColor = volatility === 'High' ? '#ef4444' : volatility === 'Low' ? '#10b981' : '#fbbf24';
+                
+                const intelligenceHtml = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px;">
+                        <div><div style="font-size: 10px; color: #8a8d91;">Sentiment</div><div style="font-size: 12px; font-weight: 600; color: ${sentimentColor};">${sentiment}</div></div>
+                        <div><div style="font-size: 10px; color: #8a8d91;">Volatility</div><div style="font-size: 12px; font-weight: 600; color: ${volatilityColor};">${volatility}</div></div>
+                        <div><div style="font-size: 10px; color: #8a8d91;">Confidence</div><div style="font-size: 12px; font-weight: 600; color: ${confidence > 0 ? '#10b981' : confidence < 0 ? '#ef4444' : '#8a8d91'};">${confidence > 0 ? '+' : ''}${(confidence * 100).toFixed(1)}%</div></div>
+                    </div>
+                `;
+                document.getElementById('tradingIntelligence').innerHTML = intelligenceHtml;
+
+            } catch (error) {
+                console.error('Planetary positions update error:', error);
+                document.getElementById('planetaryPositions').innerHTML = '<div style="text-align: center; color: #8a8d91; font-size: 12px; padding: 20px; grid-column: 1 / -1;">Error loading planetary data</div>';
+            }
+        }
+        
+        // Tooltip functions for planetary positions
+        function showPlanetTooltip(planetName, element, event) {
+            const tooltipText = element.getAttribute('title');
+            element.style.borderColor = '#4a90e2';
+            element.style.transform = 'translateY(-2px)';
+        }
+
+        function hidePlanetTooltip(element) {
+            element.style.borderColor = '#2a3441';
+            element.style.transform = 'translateY(0)';
+        }
+
+        // Update pie chart showing AI data source weights
+        function updatePieChart(data) {
+            const unified = data.unified_confidence;
+            
+            if (!unified || !unified.pie_chart_data) {
+                document.getElementById('pieChartStats').innerHTML = '<div style="text-align: center; color: #8a8d91; padding: 20px;">No pie chart data available</div>';
+                return;
+            }
+            
+            const pieData = unified.pie_chart_data;
+            const chartData = pieData.chart_data || [];
+            
+            // Create Plotly pie chart
+            const plotData = [{
+                values: chartData.map(item => item.value),
+                labels: chartData.map(item => item.name),
+                type: 'pie',
+                marker: {
+                    colors: chartData.map(item => item.color)
+                },
+                textinfo: 'label+percent',
+                textposition: 'auto',
+                hovertemplate: '<b>%{label}</b><br>Weight: %{value}%<br>Components: %{customdata}<extra></extra>',
+                customdata: chartData.map(item => item.active_components)
+            }];
+            
+            const layout = {
+                margin: { t: 10, b: 10, l: 10, r: 10 },
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                font: { color: '#e8eaed', size: 10 },
+                showlegend: false
+            };
+            
+            const config = {
+                displayModeBar: false,
+                responsive: true
+            };
+            
+            Plotly.newPlot('pieChart', plotData, layout, config);
+            
+            // Update stats
+            const statsHtml = `
+                <div style="color: #e8eaed; font-weight: 600; margin-bottom: 10px;">Data Source Analysis</div>
+                <div style="margin-bottom: 8px;">
+                    <span style="color: #8a8d91;">Dominant Source:</span>
+                    <span style="color: #00ff88; font-weight: 600;">${pieData.dominant_source || 'None'}</span>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <span style="color: #8a8d91;">Active Tentacles:</span>
+                    <span style="color: #00ff88; font-weight: 600;">${pieData.total_active_tentacles || 0}/16</span>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <span style="color: #8a8d91;">Source Diversity:</span>
+                    <span style="color: #00ff88; font-weight: 600;">${pieData.source_diversity || 0} categories</span>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <span style="color: #8a8d91;">Update:</span>
+                    <span style="color: #fbbf24; font-weight: 600;">${pieData.update_frequency || 'Real-time'}</span>
+                </div>
+                <div style="font-size: 10px; color: #6b7280; margin-top: 10px;">
+                    Method: ${pieData.calculation_method || 'Weighted reliability impact'}
+                </div>
+            `;
+            
+            document.getElementById('pieChartStats').innerHTML = statsHtml;
+        }
+        
+        // Update astrological highlights
+        function updateAstrologicalHighlights(data) {
+            const highlightsContainer = document.getElementById('astrologicalHighlights');
+            const unified = data.unified_confidence;
+            
+            try {
+                // Get real-time astrological updates (would be from unified confidence system)
+                const astroUpdates = unified?.astrological_updates || {};
+                
+                if (!astroUpdates.significant_aspects) {
+                    highlightsContainer.innerHTML = '<div style="text-align: center; color: #8a8d91; font-size: 12px; padding: 20px;">No significant astrological data available</div>';
+                    return;
+                }
+                
+                const highlights = [];
+                const timeString = new Date().toLocaleTimeString();
+                
+                // Process significant aspects
+                const aspects = astroUpdates.significant_aspects || [];
+                aspects.slice(0, 3).forEach(aspect => {
+                    const strength = aspect.financial_impact || 0;
+                    const significance = aspect.crypto_significance || 'General market influence';
+                    
+                    highlights.push({
+                        icon: '⚹',
+                        title: `${aspect.planet1}-${aspect.planet2} ${aspect.aspect}`,
+                        description: `${significance} (Impact: ${(strength * 100).toFixed(1)}%)`,
+                        importance: strength > 0.7 ? 'high' : strength > 0.4 ? 'medium' : 'low',
+                        time: timeString
+                    });
+                });
+                
+                // Process position highlights
+                const positions = astroUpdates.position_highlights || [];
+                positions.slice(0, 2).forEach(pos => {
+                    if (pos.is_critical) {
+                        highlights.push({
+                            icon: '🌟',
+                            title: `${pos.planet} at Critical Degree`,
+                            description: `${pos.degree.toFixed(1)}° ${pos.sign} - Critical market timing`,
+                            importance: 'high',
+                            time: timeString
+                        });
+                    }
+                });
+                
+                // Lunar phase highlight
+                const astroData = data.astrological_analysis;
+                if (astroData?.current_lunar_detailed) {
+                    const lunar = astroData.current_lunar_detailed;
+                    highlights.push({
+                        icon: lunar.phase_icon || '🌙',
+                        title: `Lunar Phase Impact`,
+                        description: `${lunar.illumination_percent || 0}% illuminated - ${lunar.trading_impact || 'neutral'} bias`,
+                        importance: 'medium',
+                        time: timeString
+                    });
+                }
+                
+                // Generate HTML
+                if (highlights.length === 0) {
+                    highlightsContainer.innerHTML = '<div style="text-align: center; color: #8a8d91; font-size: 12px; padding: 20px;">No significant astrological highlights at this time</div>';
+                    return;
+                }
+                
+                const importanceColors = {
+                    'high': '#ff4757',
+                    'medium': '#fbbf24',
+                    'low': '#8a8d91'
+                };
+                
+                const highlightsHtml = highlights.map(highlight => `
+                    <div style="
+                        display: flex;
+                        align-items: flex-start;
+                        gap: 12px;
+                        padding: 10px;
+                        border: 1px solid #252932;
+                        border-radius: 8px;
+                        margin-bottom: 8px;
+                        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(16, 185, 129, 0.05));
+                    ">
+                        <span style="font-size: 18px;">${highlight.icon}</span>
+                        <div style="flex: 1;">
+                            <div style="
+                                font-size: 12px;
+                                font-weight: 600;
+                                color: ${importanceColors[highlight.importance]};
+                                margin-bottom: 4px;
+                            ">${highlight.title}</div>
+                            <div style="font-size: 10px; color: #8a8d91; line-height: 1.4;">${highlight.description}</div>
+                            <div style="font-size: 9px; color: #6b7280; margin-top: 4px;">${highlight.time}</div>
+                        </div>
+                        <div style="
+                            width: 8px;
+                            height: 8px;
+                            border-radius: 50%;
+                            background: ${importanceColors[highlight.importance]};
+                            margin-top: 8px;
+                        "></div>
+                    </div>
+                `).join('');
+                
+                highlightsContainer.innerHTML = highlightsHtml;
+                
+            } catch (error) {
+                console.log('Astrological highlights update error:', error);
+                highlightsContainer.innerHTML = '<div style="text-align: center; color: #8a8d91; font-size: 12px; padding: 20px;">Astrological data processing...</div>';
+            }
+        }
+        
         // Initialize
         initChart();
         
-        // Load initial data
+        // Load initial data via API (non-blocking)
         fetch('/api/data')
             .then(r => r.json())
-            .then(updateDisplay)
-            .catch(err => console.error('Initial load error:', err));
+            .then(data => {
+                try {
+                    console.log('📊 API data received:', Object.keys(data));
+                    updateDisplay(data);
+                    console.log('✅ Initial data loaded and display updated');
+                } catch (err) {
+                    console.error('❌ Error in updateDisplay:', err);
+                    // Show basic price at least
+                    try {
+                        document.getElementById('currentPrice').textContent = `$${data.current_price || '0.000000'}`;
+                        document.getElementById('strategyMeta').textContent = data.strategy || 'Error loading strategy';
+                    } catch (e) {
+                        console.error('❌ Error updating basic elements:', e);
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('❌ API fetch error:', err);
+                // Show error message in planetary positions section
+                const planetaryDiv = document.getElementById('planetaryPositions');
+                if (planetaryDiv) {
+                    planetaryDiv.innerHTML = '<div style="text-align: center; color: #ff4444; font-size: 12px; padding: 20px; grid-column: 1 / -1;">API Error: Unable to load data</div>';
+                }
+            });
     </script>
 </body>
 </html>

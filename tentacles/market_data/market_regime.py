@@ -15,7 +15,7 @@ class MarketRegimeDetector:
     
     def create_db(self):
         """Create database for regime tracking"""
-        conn = sqlite3.connect('market_regime.db')
+        conn = sqlite3.connect('data/market_regime.db')
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -185,7 +185,7 @@ class MarketRegimeDetector:
     
     def log_regime(self, symbol, timeframe, regime_data):
         """Log regime detection to database"""
-        conn = sqlite3.connect('market_regime.db')
+        conn = sqlite3.connect('data/market_regime.db')
         cursor = conn.cursor()
         
         cursor.execute('''

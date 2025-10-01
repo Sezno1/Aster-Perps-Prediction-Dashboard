@@ -19,7 +19,7 @@ class BacktestEngine:
     def load_data(self, symbol, timeframe, days=90):
         """Load historical data for backtesting"""
         try:
-            conn = sqlite3.connect('market_data.db')
+            conn = sqlite3.connect('data/market_data.db')
             
             query = '''
                 SELECT timestamp, open, high, low, close, volume 

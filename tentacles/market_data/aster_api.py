@@ -6,11 +6,15 @@ import requests
 import pandas as pd
 from datetime import datetime
 from typing import Dict, Optional, List
-import config
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from core.config import *
 
 class AsterAPI:
     def __init__(self):
-        self.base_url = config.ASTER_DEX_API
+        self.base_url = ASTER_DEX_API
         self.session = requests.Session()
         self.session.headers.update({
             'Content-Type': 'application/json'
@@ -173,7 +177,7 @@ class AsterAPI:
             ]
         return []
     
-    def get_all_aster_data(self, symbol: str = config.ASTER_SYMBOL, 
+    def get_all_aster_data(self, symbol: str = ASTER_SYMBOL, 
                            fetch_klines_1h: bool = True,
                            fetch_klines_4h: bool = True) -> Dict:
         """Get comprehensive Aster data from DEX API"""

@@ -1,0 +1,82 @@
+{
+  "timestamp": "2025-09-28T17:29:02.234588",
+  "symbol": "ASTER/USDT",
+  "btc_cycle": {
+    "phase": "BULL_MARKET_PHASE_1",
+    "days_since_halving": 527,
+    "cycle_progress_pct": 36.54646324549237,
+    "description": "Bull market begins. BTC breaks ATH. Momentum building.",
+    "trading_strategy": "Aggressive. Ride trends. Higher leverage OK. Hold winners."
+  },
+  "altcoin_season": {
+    "index": 60.86956521739131,
+    "status": "\u2696\ufe0f MIXED - Selective alt trading"
+  },
+  "multi_timeframe": {
+    "overall_signal": "SELL",
+    "confidence": 71.42857142857143,
+    "alignment_score": 71.42857142857143,
+    "reasoning": "5/7 timeframes bearish. Avoid longs.",
+    "buy_count": 0,
+    "uptrend_count": 0
+  },
+  "market_regime": {
+    "overall_regime": "RANGING_MARKET",
+    "strategy": "Mean reversion plays. Buy support, sell resistance. Lower leverage.",
+    "alignment_score": 80.0
+  },
+  "patterns": {
+    "best_patterns": [
+      {
+        "pattern_id": "FLAG_BREAKOUT_1H",
+        "pattern_name": "Bullish Flag Breakout",
+        "timeframe": "1h",
+        "total_trades": 0,
+        "win_rate": 0.0,
+        "profit_factor": 0.0,
+        "avg_profit_pct": 0.0
+      },
+      {
+        "pattern_id": "SUPPORT_BOUNCE_15M",
+        "pattern_name": "Support Bounce with Volume",
+        "timeframe": "15m",
+        "total_trades": 0,
+        "win_rate": 0.0,
+        "profit_factor": 0.0,
+        "avg_profit_pct": 0.0
+      },
+      {
+        "pattern_id": "PULLBACK_TO_EMA_1H",
+        "pattern_name": "Pullback to 20 EMA in Uptrend",
+        "timeframe": "1h",
+        "total_trades": 0,
+        "win_rate": 0.0,
+        "profit_factor": 0.0,
+        "avg_profit_pct": 0.0
+      }
+    ],
+    "total_patterns": 6
+  },
+  "selected_strategy": {
+    "strategy": "SCALP",
+    "leverage_min": 5,
+    "leverage_max": 15,
+    "recommended_leverage": 10,
+    "hold_time": "minutes",
+    "target_profit_min": 0.5,
+    "target_profit_max": 2,
+    "reasoning": "Bull market but low confluence. Quick scalps only."
+  },
+  "final_recommendation": {
+    "action": "BUY",
+    "confidence": 55,
+    "score": 55,
+    "reasoning": "Bull cycle phase \u2022 Alt season active (61%) \u2022 High TF alignment (71%)",
+    "strategy": "SCALP",
+    "leverage": 10,
+    "target_profit_range": [
+      0.5,
+      2
+    ]
+  }
+}

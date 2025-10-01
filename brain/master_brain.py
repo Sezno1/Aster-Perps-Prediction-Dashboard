@@ -4,12 +4,16 @@ Combines all engines: Cycles, Patterns, Multi-TF, Regime, Strategy Selection
 This is the central intelligence that makes final trading decisions
 """
 
-from btc_cycle_engine import BTCCycleEngine
-from market_regime import MarketRegimeDetector
-from multi_timeframe_engine import MultiTimeframeEngine
-from pattern_library import PatternLibrary
-from strategy_selector import StrategySelector
-from ccxt_aggregator import MultiExchangeAggregator
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from tentacles.market_data.btc_cycle_engine import BTCCycleEngine
+from tentacles.market_data.market_regime import MarketRegimeDetector
+from tentacles.technical.multi_timeframe_engine import MultiTimeframeEngine
+from tentacles.pattern_analysis.pattern_library import PatternLibrary
+from tentacles.intelligence.strategy_selector import StrategySelector
+from tentacles.market_data.ccxt_aggregator import MultiExchangeAggregator
 from datetime import datetime
 import json
 

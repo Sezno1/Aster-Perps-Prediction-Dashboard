@@ -16,7 +16,7 @@ class MultiTimeframeEngine:
     def load_timeframe_data(self, symbol, timeframe, limit=200):
         """Load data for specific timeframe"""
         try:
-            conn = sqlite3.connect('market_data.db')
+            conn = sqlite3.connect('data/market_data.db')
             
             query = '''
                 SELECT timestamp, open, high, low, close, volume 

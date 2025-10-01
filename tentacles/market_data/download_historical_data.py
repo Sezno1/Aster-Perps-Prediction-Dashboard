@@ -11,7 +11,7 @@ import time
 
 def create_market_data_db():
     """Create database for storing historical market data"""
-    conn = sqlite3.connect('market_data.db')
+    conn = sqlite3.connect('data/market_data.db')
     cursor = conn.cursor()
     
     cursor.execute('''
@@ -42,7 +42,7 @@ def save_ohlcv_to_db(symbol, timeframe, df):
     if df.empty:
         return
     
-    conn = sqlite3.connect('market_data.db')
+    conn = sqlite3.connect('data/market_data.db')
     
     records = []
     for timestamp, row in df.iterrows():
@@ -111,7 +111,7 @@ def download_all_historical_data():
     print("✅ HISTORICAL DATA DOWNLOAD COMPLETE")
     print("="*70 + "\n")
     
-    conn = sqlite3.connect('market_data.db')
+    conn = sqlite3.connect('data/market_data.db')
     cursor = conn.cursor()
     cursor.execute('SELECT symbol, timeframe, COUNT(*) FROM ohlcv GROUP BY symbol, timeframe')
     results = cursor.fetchall()

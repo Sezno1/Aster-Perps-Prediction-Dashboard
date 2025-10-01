@@ -7,12 +7,16 @@ import numpy as np
 from ta.momentum import RSIIndicator, StochasticOscillator
 from ta.trend import MACD
 from typing import Dict, Tuple
-import config
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from core.config import *
 
 class TechnicalIndicators:
     
     @staticmethod
-    def calculate_rsi(df: pd.DataFrame, period: int = config.RSI_PERIOD) -> pd.Series:
+    def calculate_rsi(df: pd.DataFrame, period: int = RSI_PERIOD) -> pd.Series:
         """Calculate RSI indicator"""
         if df.empty:
             return pd.Series()
@@ -26,9 +30,9 @@ class TechnicalIndicators:
             return pd.Series(), pd.Series(), pd.Series()
         macd = MACD(
             close=df['close'],
-            window_fast=config.MACD_FAST,
-            window_slow=config.MACD_SLOW,
-            window_sign=config.MACD_SIGNAL
+            window_fast=MACD_FAST,
+            window_slow=MACD_SLOW,
+            window_sign=MACD_SIGNAL
         )
         return macd.macd(), macd.macd_signal(), macd.macd_diff()
     
@@ -41,8 +45,8 @@ class TechnicalIndicators:
             high=df['high'],
             low=df['low'],
             close=df['close'],
-            window=config.STOCH_PERIOD,
-            smooth_window=config.STOCH_SMOOTH
+            window=STOCH_PERIOD,
+            smooth_window=STOCH_SMOOTH
         )
         return stoch.stoch(), stoch.stoch_signal()
     
@@ -73,17 +77,17 @@ class TechnicalIndicators:
             details['rsi_1h'] = round(rsi_1h_val, 2)
             details['rsi_4h'] = round(rsi_4h_val, 2)
             
-            if config.RSI_BULLISH_ZONE[0] <= rsi_1h_val <= config.RSI_BULLISH_ZONE[1]:
+            if RSI_BULLISH_ZONE[0] <= rsi_1h_val <= RSI_BULLISH_ZONE[1]:
                 score += 15
                 signals.append("RSI 1h in bullish zone")
-            elif rsi_1h_val < config.RSI_OVERSOLD:
+            elif rsi_1h_val < RSI_OVERSOLD:
                 score += 20
                 signals.append("RSI 1h oversold - bounce potential")
-            elif rsi_1h_val > config.RSI_OVERBOUGHT:
+            elif rsi_1h_val > RSI_OVERBOUGHT:
                 score -= 20
                 signals.append("⚠️ RSI 1h overbought")
             
-            if config.RSI_BULLISH_ZONE[0] <= rsi_4h_val <= config.RSI_BULLISH_ZONE[1]:
+            if RSI_BULLISH_ZONE[0] <= rsi_4h_val <= RSI_BULLISH_ZONE[1]:
                 score += 15
                 signals.append("RSI 4h in bullish zone")
         
@@ -111,7 +115,7 @@ class TechnicalIndicators:
             stoch_signal_1h_val = stoch_signal_1h.iloc[-1]
             details['stoch_1h'] = round(stoch_1h_val, 2)
             
-            if stoch_1h_val < config.STOCH_OVERSOLD and stoch_1h_val > stoch_signal_1h_val:
+            if stoch_1h_val < STOCH_OVERSOLD and stoch_1h_val > stoch_signal_1h_val:
                 score += 15
                 signals.append("Stochastic oversold reversal")
         

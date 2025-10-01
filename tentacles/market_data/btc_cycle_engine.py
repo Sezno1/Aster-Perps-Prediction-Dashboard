@@ -22,7 +22,7 @@ class BTCCycleEngine:
     
     def create_db(self):
         """Create database for cycle tracking"""
-        conn = sqlite3.connect('btc_cycles.db')
+        conn = sqlite3.connect('data/btc_cycles.db')
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -154,7 +154,7 @@ class BTCCycleEngine:
         if not cycle_pos:
             return
         
-        conn = sqlite3.connect('btc_cycles.db')
+        conn = sqlite3.connect('data/btc_cycles.db')
         cursor = conn.cursor()
         
         cursor.execute('''

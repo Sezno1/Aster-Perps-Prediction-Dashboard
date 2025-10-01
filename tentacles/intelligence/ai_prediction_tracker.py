@@ -10,7 +10,7 @@ from typing import Dict, Optional
 import json
 
 class AIPredictionTracker:
-    def __init__(self, db_path: str = "ai_predictions.db"):
+    def __init__(self, db_path: str = "data/ai_predictions.db"):
         self.db_path = db_path
         self._init_database()
     
